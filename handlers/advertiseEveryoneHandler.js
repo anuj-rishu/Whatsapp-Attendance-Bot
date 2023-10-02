@@ -20,7 +20,7 @@ const advertiseEveryone = async (client, message) => {
                 }
                 else{
                     peoples.forEach(people => {
-                        const messagetosend = `Advertisment: \n${match[1]}`
+                        const messagetosend = `${match[1]}`
                         client.sendMessage(people.from, messagetosend)
                     });
                     return;

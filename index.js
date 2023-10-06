@@ -33,9 +33,10 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
             store: store,
             backupSyncIntervalMs: 300000
         }),
-        // puppeteer: {
-        //     args: ['--no-sandbox'],
-        // }
+        puppeteer: {
+            headless: true,
+            args: ['--no-sandbox']
+        }
     });
 
     client.on('remote_session_saved', () => {

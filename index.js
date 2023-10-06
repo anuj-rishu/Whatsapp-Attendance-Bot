@@ -1,5 +1,5 @@
 const qrcode = require('qrcode-terminal');
-const { Client, RemoteAuth, NoAuth } = require('whatsapp-web.js');
+const { Client, RemoteAuth } = require('whatsapp-web.js');
 const { MongoStore } = require('wwebjs-mongo');
 const mongoose = require('mongoose');
 const checkSingle = require('./middleware/checksingle')
@@ -28,7 +28,6 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
     const store = new MongoStore({ mongoose: mongoose });
 
     const client = new Client({
-        // authStrategy: new NoAuth()
         authStrategy: new RemoteAuth({
             store: store,
             backupSyncIntervalMs: 300000
@@ -49,6 +48,18 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
 
     client.on('ready', () => {
         console.log('Client is ready!');
+    });
+
+    client.on('disconnected', () => {
+        console.log('Client is disconnected!');
+    });
+    
+    client.on('authenticated', () => {
+        console.log('Client is authenticated!');
+    });
+    
+    client.on('auth_failure', () => {
+        console.log('Client is auth_failure!');
     });
 
     client.on('message', async (message) => {

@@ -3,7 +3,7 @@ const axios = require('axios');
 const extractDetails = require('../utils/extractDetails');
 const Chat = require('../models/Chat');
 const getSubjectsWithMoreAbsentHours = require('../utils/getSubjectsWithMoreAbsentHours');
-const checkPayment = require('../middleware/checkpayment');
+const checkPayment = require('../middleware/checkPayment');
 
 function getCurrentTimeIndia() {
     const options = { timeZone: 'Asia/Kolkata', hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' };

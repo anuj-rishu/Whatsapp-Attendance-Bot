@@ -1,7 +1,7 @@
 const axios = require('axios');
 const Chat = require('../models/Chat');
 const Update = require('../models/Update');
-const extractDetails = require("../utils/extractDetails")
+const extractDetails = require("../utils/extractDetails");
 
 
 const verifyHandler = async (chat, client, message) => {
@@ -18,7 +18,7 @@ const verifyHandler = async (chat, client, message) => {
             })
             if (!response.data) throw response;
             if (response.data.message && response.data.message === "Wrong email or password") {
-                client.sendMessage(message.from, "Your username or password seems to be incorrect!")
+                client.sendMessage(message.from, "Your username or password seems to be incorrect!\nPlease Enter your Academia Password.")
                 return;
             }
             else {
@@ -52,7 +52,9 @@ const verifyHandler = async (chat, client, message) => {
                             hasIssue: false,
                             token: res2.data.token
                         })
-                        await Update.findByIdAndUpdate(people._id, {
+                        await Update.findOneAndUpdate({
+                            chatid: chat._id
+                        },{
                             token: res2.data.token
                         })
                     }
@@ -63,7 +65,7 @@ const verifyHandler = async (chat, client, message) => {
                 if (contact.isMyContact) {
                     const currentDateTime = new Date();
                     const dueDateTime = new Date(currentDateTime);
-                    dueDateTime.setDate(currentDateTime.getDate() + 61);
+                    dueDateTime.setDate(currentDateTime.getDate() + Number(process.env.FRIEND_FREE_TIME));
                     let updatedchat = await Chat.findByIdAndUpdate(chat._id, {
                         userid: userId,
                         password,
@@ -91,7 +93,7 @@ const verifyHandler = async (chat, client, message) => {
                 else {
                     const currentDateTime = new Date();
                     const dueDateTime = new Date(currentDateTime);
-                    dueDateTime.setDate(currentDateTime.getDate() + 31);
+                    dueDateTime.setDate(currentDateTime.getDate() + Number(process.env.NORMAL_FREE_TIME));
                     let updatedchat = await Chat.findByIdAndUpdate(chat._id, {
                         userid: userId,
                         password,
@@ -111,7 +113,8 @@ const verifyHandler = async (chat, client, message) => {
                     await Update.create({
                         token: token,
                         chatid: updatedchat._id,
-                        courses
+                        courses,
+                        from: message.from
                     })
                     client.sendMessage(message.from, `Congrats! ${res.data.user.name} We have verified you. you will start receiving updates soon!`)
                 }

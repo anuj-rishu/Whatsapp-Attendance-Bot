@@ -6,7 +6,7 @@ const advertiseEveryone = async (client, message) => {
     const pattern = /\/everyone\s+(.+)/i;
     const match = message.body.match(pattern);
     if(match === null){
-        client.sendMessage(message.from, `Type:\n*/Everyone {Your advertisment}*`)
+        client.sendMessage(message.from, `Type:\n*/Everyone {Your Message}*`)
         return;
     }
     if(peoples){
@@ -29,7 +29,7 @@ const advertiseEveryone = async (client, message) => {
         }
         else{
             peoples.forEach(people => {
-                const messagetosend = `Advertisment: \n${match[1]}`
+                const messagetosend = `${match[1]}`
                 client.sendMessage(people.from, messagetosend)
             });
             return;

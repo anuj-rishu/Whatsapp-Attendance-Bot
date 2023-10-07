@@ -6,7 +6,7 @@ const changePassHandler = async (chat, client, message) => {
     const pattern = /\/cp (\S+)/i;
     const match = message.body.match(pattern);
     if (match === null) {
-        client.sendMessage(message.from, `Type */cP {newPassword}*\nto change password`)
+        client.sendMessage(message.from, `Type */cp {newPassword}* to change password`)
     }
     else {
         const newpassword = match[1];
@@ -22,7 +22,7 @@ const changePassHandler = async (chat, client, message) => {
                     password: newpassword
                 })
                 if (response.data.message && response.data.message === "Wrong email or password") {
-                    client.sendMessage(message.from, "Given password seems to be incorrect!\ntry again using */cP* command")
+                    client.sendMessage(message.from, "Given password seems to be incorrect! Please Enter your Academia Password.\nTry again using */cp* command")
                     return;
                 }
                 else if (response.data.token) {

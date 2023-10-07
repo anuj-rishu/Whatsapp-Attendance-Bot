@@ -91,22 +91,22 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
             }
             const hasIssueCheck = await issueCheck(firstResponse.chat, client, message);
             if (hasIssueCheck.success === false) return;
-            const paymentRegex = /\/payment/i;
-            if (paymentRegex.test(message.body)) {
-                const res = await checkPayment(firstResponse.chat, client, message, false)
-                if (res.success == false || res.partial == false) {
-                    paymentHandler(firstResponse.chat, client, message);
-                }
-                else if (res.success && res.partial) {
-                    client.sendMessage(message.from, "Your subscription is not over!\nWe will remind you when your subscription is about to expire")
-                }
-                return;
-            }
-            const paymentResponse = await checkPayment(firstResponse.chat, client, message, true);
-            if (paymentResponse.success === false) {
-                paymentHandler(firstResponse.chat, client, message);
-                return;
-            }
+            // const paymentRegex = /\/payment/i;
+            // if (paymentRegex.test(message.body)) {
+            //     const res = await checkPayment(firstResponse.chat, client, message, false)
+            //     if (res.success == false || res.partial == false) {
+            //         paymentHandler(firstResponse.chat, client, message);
+            //     }
+            //     else if (res.success && res.partial) {
+            //         client.sendMessage(message.from, "Your subscription is not over!\nWe will remind you when your subscription is about to expire")
+            //     }
+            //     return;
+            // }
+            // const paymentResponse = await checkPayment(firstResponse.chat, client, message, true);
+            // if (paymentResponse.success === false) {
+            //     paymentHandler(firstResponse.chat, client, message);
+            //     return;
+            // }
             const suggestRegex = /\/suggest/i;
             if (suggestRegex.test(message.body)) {
                 await suggestHandler(firstResponse.chat, client, message)
@@ -138,12 +138,12 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
                 return;
             }
             const checkeveryoneRegex = /\/checkeveryone/i;
-            if (checkeveryoneRegex.test(message.body) ) {
+            if (checkeveryoneRegex.test(message.body) && message.from === process.env.MY_PHONE) {
                 await checkEveryone(client, message)
                 return;
             }
             const everyoneRegex = /\/everyone/i;
-            if (everyoneRegex.test(message.body)) {
+            if (everyoneRegex.test(message.body) && message.from === process.env.MY_PHONE) {
                 await advertiseEveryone(client, message)
                 return;
             }

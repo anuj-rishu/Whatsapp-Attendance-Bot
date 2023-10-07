@@ -72,25 +72,25 @@ const attHandler = async (chat, client, message) => {
         }
         const data = getSubjectsWithMoreAbsentHours(attendance, res.data);
         if (data.length <= 0) {
-            client.sendMessage(message.from, "Yay! Your Attendance was not decreased!")
             let messagetosend = "Attendance:\n\n"
             attendance.forEach(Object => {
-                messagetosend += Object.subject_name.length > 20 ? `${Object.subject_name.slice(0, 20)}... ${Object.subject_name.slice(-8)}\n` : `${Object.subject_name}\n`
+                messagetosend += Object.subject_name.length > 32 ? `${Object.subject_name.slice(0, 20)}... ${Object.subject_name.slice(-8)}\n` : `${Object.subject_name}\n`
                 const marorreq = getFinal(Object.conducted_hours, Object.conducted_hours - Object.absent_hours)
-                messagetosend += `${marorreq >= 0 ? `Mar: *${marorreq}*` : `Req: *${-1 * marorreq}*`} Abs: *${Object.absent_hours}* %: *${Math.round(((Object.conducted_hours - Object.absent_hours) * 100) / Object.conducted_hours)}*\n\n`
+                messagetosend += `${marorreq >= 0 ? `Mar:*${marorreq}*` : `Req:*${-1 * marorreq}*`}  Abs:*${Object.absent_hours}*  %:*${Math.round(((Object.conducted_hours - Object.absent_hours) * 100) / Object.conducted_hours)}*\n\n`
             });
-            client.sendMessage(message.from, messagetosend)
+            client.sendMessage(message.from, messagetosend.slice(0, -2))
+            client.sendMessage(message.from, "Yay! Your Attendance was not decreased since last checked!")
         }
         else {
-            client.sendMessage(message.from, "Attendance Decreased!")
             let texttosend = "";
             data.forEach(tt => {
-                texttosend += tt.subject_name.length > 20 ? `${tt.subject_name.slice(0, 20)}... ${tt.subject_name.slice(-8)}\n` : `${tt.subject_name}\n`
+                texttosend += tt.subject_name.length > 32 ? `${tt.subject_name.slice(0, 20)}... ${tt.subject_name.slice(-8)}\n` : `${tt.subject_name}\n`
                 texttosend += `Hours marked Absent: ${tt.difference_in_hours}\n\n`
             })
-            client.sendMessage(message.from, texttosend);
+            client.sendMessage(message.from, texttosend.slice(0, -2));
+            client.sendMessage(message.from, "Attendance Decreased!")
         }
-        const { courses, time_table } = extractDetails(res.data)
+        const { courses, time_table } = extractDetails(res.data);
         await Chat.findByIdAndUpdate(chat._id, {
             timetable: time_table,
             courses: courses
@@ -108,9 +108,12 @@ const attHandler = async (chat, client, message) => {
         attendance.forEach(Object => {
             messagetosend += Object.subject_name.length > 20 ? `${Object.subject_name.slice(0, 20)}... ${Object.subject_name.slice(-7)}\n` : `${Object.subject_name}\n`
             const marorreq = getFinal(Object.conducted_hours, Object.conducted_hours - Object.absent_hours)
-            messagetosend += `${marorreq >= 0 ? `Mar: *${marorreq}*` : `Req: *${-1 * marorreq}*`} Abs: *${Object.absent_hours}* %: *${Math.round(((Object.conducted_hours - Object.absent_hours) * 100) / Object.conducted_hours)}*\n\n`
+            messagetosend += `${marorreq >= 0 ? `Mar:*${marorreq}*` : `Req:*${-1 * marorreq}*`}  Abs:*${Object.absent_hours}*  %:*${Math.round(((Object.conducted_hours - Object.absent_hours) * 100) / Object.conducted_hours)}*\n\n`
         });
-        client.sendMessage(message.from, "Please verify your password again, Use /cP command")
+        await Chat.findByIdAndUpdate(chat._id, {
+            hasIssue: true
+        });
+        client.sendMessage(message.from, "Please verify your password again, Use */cp* command")
         client.sendMessage(message.from, messagetosend)
         return;
     }

@@ -32,7 +32,7 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
         //     store: store,
         //     backupSyncIntervalMs: 300000
         // }),
-        authStrategy: LocalAuth(),
+        authStrategy: new LocalAuth(),
         puppeteer: {
             headless: true,
             args: ['--no-sandbox']

@@ -84,7 +84,7 @@ const checkEveryone = async (client, message) => {
                 await Chat.findByIdAndUpdate(people.chatid, {
                     hasIssue: true
                 })
-                client.sendMessage(people.from, "Sorry there was a problem checking your Attendance! Please verify your password again! Using /cp command")
+                client.sendMessage(people.from, "Sorry there was a problem checking your Attendance! Please verify your password again! Using */cp* command")
             }
         });
         return;

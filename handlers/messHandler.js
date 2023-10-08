@@ -24,7 +24,7 @@ const getDayandTime = () => {
         }
     }
     if(currentHour > 21.5){
-        const index = daysOfWeek.findIndex(item => item.name === day);
+        const index = daysOfWeek.findIndex(item => item === day);
         day = daysOfWeek[index + 1]
     }
     return { day, currentMeal };
@@ -49,7 +49,7 @@ const messHandler = async (client, message) => {
             })
             const array = res.data.data[0][day][currentMeal];
             let stringtosend = ""
-            if(currentMeal == "Breakfast") {stringtosend += "[7:30 AM - 9:00 AM]\n"}
+            if(currentMeal == "Breakfast") {stringtosend += "[7:00 AM - 9:00 AM]\n"}
             if(currentMeal == "Lunch") {stringtosend += "[11:30 AM - 1:30 PM]\n"}
             if(currentMeal == "Snacks") {stringtosend += "[4:30 PM - 5:30 PM]\n"}
             if(currentMeal == "Dinner") {stringtosend += "[7:30 PM - 9:00 PM]\n"}

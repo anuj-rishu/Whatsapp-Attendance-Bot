@@ -18,7 +18,7 @@ const verifyHandler = async (chat, client, message) => {
             })
             if (!response.data) throw response;
             if (response.data.message && response.data.message === "Wrong email or password") {
-                client.sendMessage(message.from, "Your username or password seems to be incorrect!\nPlease Enter your Academia Password.")
+                client.sendMessage(message.from, "*Please Enter your Academia Password.*\nYour NetId or Password seems to be incorrect!")
                 return;
             }
             else {
@@ -126,7 +126,8 @@ const verifyHandler = async (chat, client, message) => {
             return;
         }
     } else {
-        client.sendMessage(message.from, "Please use correct syntax to verify!\n\n*/verify {username} {password}*")
+        client.sendMessage(message.from, "Please use correct syntax to verify!\n\n*/verify {NetId} {Password}*")
+        client.sendMessage(message.from, "Example:\n*/verify vg6796 Abc@123*")
         return;
     }
 }

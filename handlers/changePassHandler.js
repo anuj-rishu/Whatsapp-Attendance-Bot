@@ -6,7 +6,7 @@ const changePassHandler = async (chat, client, message) => {
     const pattern = /\/cp (\S+)/i;
     const match = message.body.match(pattern);
     if (match === null) {
-        client.sendMessage(message.from, `Type */cp {newPassword}* to change password`)
+        client.sendMessage(message.from, `Type */cp {Password}* to change/reverify password`)
     }
     else {
         const newpassword = match[1];

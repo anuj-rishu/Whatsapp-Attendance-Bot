@@ -3,7 +3,7 @@ const issueCheck = async (chat, client, message) => {
         return {success: true}
     }
     else{
-        client.sendMessage(message.from, "We have detected a Issue with your account\n\nPlease use */cP* command to change your password")
+        client.sendMessage(message.from, "We have detected a Issue with your account\n\nPlease use */cp* command to change your password")
         return {success: false}
     }
 }

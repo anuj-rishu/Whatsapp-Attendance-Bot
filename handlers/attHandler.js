@@ -76,7 +76,7 @@ const attHandler = async (chat, client, message) => {
             attendance.forEach(Object => {
                 messagetosend += Object.subject_name.length > 32 ? `${Object.subject_name.slice(0, 20)}... ${Object.subject_name.slice(-8)}\n` : `${Object.subject_name}\n`
                 const marorreq = getFinal(Object.conducted_hours, Object.conducted_hours - Object.absent_hours)
-                messagetosend += `${marorreq >= 0 ? `Mar:*${marorreq}*` : `Req:*${-1 * marorreq}*`}  Abs:*${Object.absent_hours}*  %:*${Math.round(((Object.conducted_hours - Object.absent_hours) * 100) / Object.conducted_hours)}*\n\n`
+                messagetosend += `${marorreq >= 0 ? `Margin:*${marorreq}*` : `Required:*${-1 * marorreq}*`}  Abs:*${Object.absent_hours}*  %:*${Math.round(((Object.conducted_hours - Object.absent_hours) * 100) / Object.conducted_hours)}*\n\n`
             });
             client.sendMessage(message.from, messagetosend.slice(0, -2))
             client.sendMessage(message.from, "Yay! Your Attendance was not decreased since last checked!")
@@ -108,7 +108,7 @@ const attHandler = async (chat, client, message) => {
         attendance.forEach(Object => {
             messagetosend += Object.subject_name.length > 20 ? `${Object.subject_name.slice(0, 20)}... ${Object.subject_name.slice(-7)}\n` : `${Object.subject_name}\n`
             const marorreq = getFinal(Object.conducted_hours, Object.conducted_hours - Object.absent_hours)
-            messagetosend += `${marorreq >= 0 ? `Mar:*${marorreq}*` : `Req:*${-1 * marorreq}*`}  Abs:*${Object.absent_hours}*  %:*${Math.round(((Object.conducted_hours - Object.absent_hours) * 100) / Object.conducted_hours)}*\n\n`
+            messagetosend += `${marorreq >= 0 ? `Margin:*${marorreq}*` : `Required:*${-1 * marorreq}*`}  Abs:*${Object.absent_hours}*  %:*${Math.round(((Object.conducted_hours - Object.absent_hours) * 100) / Object.conducted_hours)}*\n\n`
         });
         await Chat.findByIdAndUpdate(chat._id, {
             hasIssue: true

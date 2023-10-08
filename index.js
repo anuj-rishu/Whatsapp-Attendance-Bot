@@ -1,5 +1,5 @@
 const qrcode = require('qrcode-terminal');
-const { Client, RemoteAuth } = require('whatsapp-web.js');
+const { Client, RemoteAuth, LocalAuth } = require('whatsapp-web.js');
 const { MongoStore } = require('wwebjs-mongo');
 const mongoose = require('mongoose');
 const checkSingle = require('./middleware/checksingle')
@@ -28,10 +28,11 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
     const store = new MongoStore({ mongoose: mongoose });
 
     const client = new Client({
-        authStrategy: new RemoteAuth({
-            store: store,
-            backupSyncIntervalMs: 300000
-        }),
+        // authStrategy: new RemoteAuth({
+        //     store: store,
+        //     backupSyncIntervalMs: 300000
+        // }),
+        authStrategy: LocalAuth(),
         puppeteer: {
             headless: true,
             args: ['--no-sandbox']

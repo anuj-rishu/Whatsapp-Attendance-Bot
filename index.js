@@ -54,11 +54,11 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
     client.on('disconnected', () => {
         console.log('Client is disconnected!');
     });
-    
+
     client.on('authenticated', () => {
         console.log('Client is authenticated!');
     });
-    
+
     client.on('auth_failure', () => {
         console.log('Client is auth_failure!');
     });
@@ -113,29 +113,33 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
                 await suggestHandler(firstResponse.chat, client, message)
                 return;
             }
+            // CREDITS TO SRMCHECK.ME FOR PROVIDING DATA
             const attRegex = /\/att/i;
             if (attRegex.test(message.body)) {
                 await attHandler(firstResponse.chat, client, message)
                 return;
             }
+            // CREDITS TO SRMCHECK.ME FOR PROVIDING DATA
             const ttRegex = /\/tt/i;
             if (ttRegex.test(message.body)) {
                 await ttHandler(firstResponse.chat, client, message)
                 return;
             }
+            // CREDITS TO SRMCHECK.ME FOR PROVIDING DATA
             const wttRegex = /\/wtt/i;
             if (wttRegex.test(message.body)) {
                 await wttHandler(firstResponse.chat, client, message)
                 return;
             }
+            // CREDITS TO WHAT'S IN MESS FOR PROVIDING THE DATA
             const messRegex = /\/mess/i;
             if (messRegex.test(message.body)) {
-                await messHandler( client, message)
+                await messHandler(client, message)
                 return;
             }
             const advertieRegex = /\/advertise/i;
             if (advertieRegex.test(message.body)) {
-                await advertiseHandler( client, message)
+                await advertiseHandler(client, message)
                 return;
             }
             const checkeveryoneRegex = /\/checkeveryone/i;

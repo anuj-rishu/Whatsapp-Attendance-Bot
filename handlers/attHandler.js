@@ -30,23 +30,22 @@ function getFinal(conductedHours, presentHours) {
     if (r2 === -1) return -1 * r1;
 }
 
-const attHandler = async (chat, client, message) => {
+const attHandler = async (chat, rclient, message) => {
     const attendance = chat.courses;
     try {
-        client.sendMessage(message.from, "Please wait fetching your attendance...")
         let res
-        res = await axios.post("https://academia-s.azurewebsites.net/course-user", {}, {
+        res = await axios.post(process.env.DATA_URL, {}, {
             headers: {
                 "X-Access-Token": chat.token
             }
         })
         if (res.data.error) {
             const newchat = await Chat.findById(chat._id)
-            let res2 = await axios.post("https://academia-s.azurewebsites.net/login", {
+            let res2 = await axios.post(process.env.TOKEN_URL, {
                 username: newchat.userid,
                 password: newchat.password
             })
-            let res3 = await axios.post("https://academia-s.azurewebsites.net/course-user", {}, {
+            let res3 = await axios.post(process.env.DATA_URL, {}, {
                 headers: {
                     "X-Access-Token": res2.data.token
                 }
@@ -78,8 +77,10 @@ const attHandler = async (chat, client, message) => {
                 const marorreq = getFinal(Object.conducted_hours, Object.conducted_hours - Object.absent_hours)
                 messagetosend += `${marorreq >= 0 ? `Margin:*${marorreq}*` : `Required:*${-1 * marorreq}*`}  Abs:*${Object.absent_hours}*  %:*${Math.round(((Object.conducted_hours - Object.absent_hours) * 100) / Object.conducted_hours)}*\n\n`
             });
-            client.sendMessage(message.from, messagetosend.slice(0, -2))
-            client.sendMessage(message.from, "Yay! Your Attendance was not decreased since last checked!")
+            rclient.set(message.payload.source, value + 1, { XX: true })
+            await rclient.disconnect()
+            // client.sendMessage(message.from, messagetosend.slice(0, -2))
+            // client.sendMessage(message.from, "Yay! Your Attendance was not decreased since last checked!")
         }
         else {
             let texttosend = "";
@@ -87,8 +88,10 @@ const attHandler = async (chat, client, message) => {
                 texttosend += tt.subject_name.length > 32 ? `${tt.subject_name.slice(0, 20)}... ${tt.subject_name.slice(-8)}\n` : `${tt.subject_name}\n`
                 texttosend += `Hours marked Absent: ${tt.difference_in_hours}\n\n`
             })
-            client.sendMessage(message.from, texttosend.slice(0, -2));
-            client.sendMessage(message.from, "Attendance Decreased!")
+            rclient.set(message.payload.source, value + 1, { XX: true })
+            await rclient.disconnect()
+            // client.sendMessage(message.from, texttosend.slice(0, -2));
+            // client.sendMessage(message.from, "Attendance Decreased!")
         }
         const { courses, time_table } = extractDetails(res.data);
         await Chat.findByIdAndUpdate(chat._id, {
@@ -101,9 +104,7 @@ const attHandler = async (chat, client, message) => {
             courses: courses
         })
         return;
-
     } catch (error) {
-        client.sendMessage(message.from, "Could not fetch attendance, Showing you last attendance!");
         let messagetosend = "Old Attendance:\n\n"
         attendance.forEach(Object => {
             messagetosend += Object.subject_name.length > 20 ? `${Object.subject_name.slice(0, 20)}... ${Object.subject_name.slice(-7)}\n` : `${Object.subject_name}\n`
@@ -113,6 +114,9 @@ const attHandler = async (chat, client, message) => {
         await Chat.findByIdAndUpdate(chat._id, {
             hasIssue: true
         });
+        rclient.set(message.payload.source, value + 1, { XX: true })
+        await rclient.disconnect()
+        // client.sendMessage(message.from, "Could not fetch attendance, Showing you last attendance!");
         client.sendMessage(message.from, "Please verify your password again, Use */cp* command")
         client.sendMessage(message.from, messagetosend)
         return;

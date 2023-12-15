@@ -1,19 +1,18 @@
 const Chat = require("../models/Chat")
 
-const checkVerifed = async (client, message) => {
-    const chat = await message.getChat()
-    const foundchat = await Chat.findOne({ phone_number: chat.id.user })
+const checkVerifed = async (message) => {
+    const foundchat = await Chat.findOne({ phone_number: message.payload.payload.text })
     if(!foundchat){
         const createdChat = await Chat.create({
-            phone_number: chat.id.user
+            phone_number: message.payload.payload.text
         })
         return {chat: createdChat, success: false}
     }
-    else if (foundchat.isVerifed == true) {
-        return { chat: foundchat, success: true };
+    else if (foundchat.isVerifed == false) {
+        return { chat: foundchat, success: false };
     }
     else {
-        return { chat: foundchat, success: false };
+        return { chat: foundchat, success: true };
     }
 }
 

@@ -1,6 +1,5 @@
-const wttHandler = async (chat, client, message) => {
+const wttHandler = async (chat, rclient, message) => {
     try {
-        client.sendMessage(message.from, "Please wait fetching your whole time-table...")
         let stringtosend = `Time-Table:`
         chat.timetable.forEach(tt => {
             stringtosend += "\n\n";
@@ -9,11 +8,14 @@ const wttHandler = async (chat, client, message) => {
                 stringtosend += `${tt2.course_name.length > 12 ? tt2.course_name.slice(0, 12) + '...' : tt2.course_name} => ${tt2.time}\n`
             });
         });
-        client.sendMessage(message.from, stringtosend);
+        rclient.set(message.payload.source, value + 1, { XX: true })
+        await rclient.disconnect()
+        // client.sendMessage(message.from, stringtosend);
         return;
     } catch (error) {
-        console.log(error)
-        client.sendMessage("There was some problem, Please try again!")
+        rclient.set(message.payload.source, value + 1, { XX: true })
+        await rclient.disconnect()
+        // client.sendMessage("There was some problem, Please try again!")
         return;
     }
 }

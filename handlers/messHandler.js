@@ -30,12 +30,11 @@ const getDayandTime = () => {
     return { day, currentMeal };
 };
 
-const messHandler = async (client, message) => {
+const messHandler = async (rclient, message) => {
     try {
         const mess = await Mess.findOne({ __v: 0 })
         const { day, currentMeal } = getDayandTime();
         if (!mess) {
-            client.sendMessage(message.from, "Please wait fetching mess details...");
             const res = await axios.get("https://whatsinmess.vercel.app/api/get_menu");
             await Mess.create({
                 monday: res.data.data[0].monday,
@@ -54,11 +53,12 @@ const messHandler = async (client, message) => {
             if(currentMeal == "Snacks") {stringtosend += "[4:30 PM - 5:30 PM]\n"}
             if(currentMeal == "Dinner") {stringtosend += "[7:30 PM - 9:00 PM]\n"}
             stringtosend += `${day}: (${currentMeal})\n\n${array.join(', ')}`
-            client.sendMessage(message.from, stringtosend)
+            rclient.set(message.payload.source, value + 1, { XX: true })
+            await rclient.disconnect()
+            // client.sendMessage(message.from, stringtosend)
             return;
         }
         else if ((Date.now() - mess.updatedAt.getTime()) > 86400000) {
-            client.sendMessage(message.from, "Please wait fetching mess details...");
             const res = await axios.get("https://whatsinmess.vercel.app/api/get_menu");
             await Mess.findByIdAndUpdate(mess._id, {
                 monday: res.data.data[0].monday,
@@ -77,7 +77,9 @@ const messHandler = async (client, message) => {
             if(currentMeal == "Snacks") {stringtosend += "[4:30 PM - 5:30 PM]\n"}
             if(currentMeal == "Dinner") {stringtosend += "[7:30 PM - 9:00 PM]\n"}
             stringtosend += `${day}: (${currentMeal})\n\n${array.join(', ')}`
-            client.sendMessage(message.from, stringtosend)
+            rclient.set(message.payload.source, value + 1, { XX: true })
+            await rclient.disconnect()
+            // client.sendMessage(message.from, stringtosend)
             return;
         }
         else {
@@ -88,13 +90,16 @@ const messHandler = async (client, message) => {
             if(currentMeal == "Snacks") {stringtosend += "[4:30 PM - 5:30 PM]\n"}
             if(currentMeal == "Dinner") {stringtosend += "[7:30 PM - 9:00 PM]\n"}
             stringtosend += `${day}: (${currentMeal})\n\n${array.join(', ')}`
-            client.sendMessage(message.from, stringtosend)
+            rclient.set(message.payload.source, value + 1, { XX: true })
+            await rclient.disconnect()
+            // client.sendMessage(message.from, stringtosend)
             return;
         }
     } catch (error) {
-        console.log(error)
         const stringtosend = `There was a error fetching Mess details, Please try again!`
-        client.sendMessage(message.from, stringtosend)
+        rclient.set(message.payload.source, value + 1, { XX: true })
+        await rclient.disconnect()
+        // client.sendMessage(message.from, stringtosend)
         return;
     }
 }

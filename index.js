@@ -1,8 +1,4 @@
-const qrcode = require('qrcode-terminal');
-const { Client, RemoteAuth, LocalAuth } = require('whatsapp-web.js');
-const { MongoStore } = require('wwebjs-mongo');
 const mongoose = require('mongoose');
-const checkSingle = require('./middleware/checksingle')
 const firstcheck = require('./middleware/firstcheck.js');
 const checkVerifed = require('./middleware/checkverified');
 const paymentHandler = require('./handlers/paymentHandler');
@@ -19,145 +15,150 @@ const advertiseEveryone = require("./handlers/advertiseEveryoneHandler");
 const wttHandler = require("./handlers/wttHandler");
 const checkEveryone = require("./handlers/checkEveryone");
 const messHandler = require('./handlers/messHandler');
+const express = require('express')
+const bodyParser = require('body-parser');
+const checkSpam = require('./middleware/checkSpam.js');
+const { createClient } = require('redis')
 require('dotenv').config()
 
+/**
+ * @typedef {Object} MessageType
+ * @property {string} app - The name of the application.
+ * @property {number} timestamp - The timestamp of the message.
+ * @property {number} version - The version of the message.
+ * @property {string} type - The type of the message. Should be one of "text", "image", "file", "audio", "video", "contact", "location", "button_reply", or "list_reply".
+ * @property {Object} payload - The payload of the message.
+ * @property {string} payload.id - The ID of the message payload.
+ * @property {string} payload.source - The source of the message.
+ * @property {string} payload.type - The type of the payload.
+ * @property {Object} payload.payload - The payload data.
+ * @property {string} payload.payload.text - The text of the message if the type is "text".
+ * @property {Object} payload.sender - Information about the sender.
+ * @property {string} payload.sender.phone - The phone number of the sender.
+ * @property {string} payload.sender.name - The name of the sender.
+ * @property {string} payload.sender.country_code - The country code of the sender.
+ * @property {string} payload.sender.dial_code - The dial code of the sender.
+ */
 
+const app = express()
+app.use(bodyParser.json());
+const port = 3000
+const client = createClient({
+    password: process.env.REDIS_PASS,
+    socket: {
+        host: 'redis-16896.c264.ap-south-1-1.ec2.cloud.redislabs.com',
+        port: 16896
+    }
+});
 
-mongoose.connect(process.env.MONGODB_URI).then(() => {
-    console.log("connected to mongo")
-    const store = new MongoStore({ mongoose: mongoose });
-
-    const client = new Client({
-        // authStrategy: new RemoteAuth({
-        //     store: store,
-        //     backupSyncIntervalMs: 300000
-        // }),
-        authStrategy: new LocalAuth(),
-        puppeteer: {
-            headless: true,
-            args: ['--no-sandbox']
-        }
-    });
-
-    client.on('remote_session_saved', () => {
-        console.log("remote session saved")
-    })
-
-    client.on('qr', qr => {
-        qrcode.generate(qr, { small: true });
-    });
-
-    client.on('ready', () => {
-        console.log('Client is ready!');
-    });
-
-    client.on('disconnected', () => {
-        console.log('Client is disconnected!');
-    });
-
-    client.on('authenticated', () => {
-        console.log('Client is authenticated!');
-    });
-
-    client.on('auth_failure', () => {
-        console.log('Client is auth_failure!');
-    });
-
-    client.on('message', async (message) => {
-        if (await checkSingle(message)) {
+app.post('/recievemessage', async (req, res) => {
+    /** @type {MessageType} */
+    const message = req.body;
+    res.json({ success: true }).status(200)
+    const rclient = await client.connect();
+    const {isSpam, spamValue} = await checkSpam(rclient, message)
+    if (!isSpam) {
+        if(message.type == "text"){
             const verifyRegex = /\/verify/i;
-            if (verifyRegex.test(message.body)) {
-                const res = await checkVerifed(client, message)
+            if (verifyRegex.test(message.payload.payload.text)) {
+                const res = await checkVerifed(message)
                 if (res.success) {
-                    client.sendMessage(message.from, "You have already Verifed Your Account!");
-                    client.sendMessage(message.from, "Type */help* to get all commands");
+                    // Already Verified, Do Nothing
                     return;
                 }
                 else {
-                    verifyHandler(res.chat, client, message)
+                    verifyHandler(res.chat, rclient, spamValue ,message)
                     return;
                 }
             }
-            const firstResponse = await firstcheck(client, message);
-            if (firstResponse.message === "Chat created" || firstResponse.message === "Not verified") return;
+            const firstResponse = await firstcheck(rclient, message);
+            if (firstResponse.message === "Chat created") return;
             const helpRegex = /\/help/i;
-            if (helpRegex.test(message.body)) {
-                helpHandler(client, message);
+            if (helpRegex.test(message.payload.payload.text)) {
+                helpHandler(rclient, message);
                 return;
             }
             const changePassRegex = /\/cp/i;
-            if (changePassRegex.test(message.body)) {
-                changePassHandler(firstResponse.chat, client, message);
+            if (changePassRegex.test(message.payload.payload.text)) {
+                changePassHandler(firstResponse.chat, rclient, message);
                 return;
             }
-            const hasIssueCheck = await issueCheck(firstResponse.chat, client, message);
+            const hasIssueCheck = await issueCheck(firstResponse.chat, rclient, message);
             if (hasIssueCheck.success === false) return;
             // const paymentRegex = /\/payment/i;
-            // if (paymentRegex.test(message.body)) {
-            //     const res = await checkPayment(firstResponse.chat, client, message, false)
+            // if (paymentRegex.test(message.payload.payload.text)) {
+            //     const res = await checkPayment(firstResponse.chat, rclient, message, false)
             //     if (res.success == false || res.partial == false) {
-            //         paymentHandler(firstResponse.chat, client, message);
+            //         paymentHandler(firstResponse.chat, rclient, message);
             //     }
             //     else if (res.success && res.partial) {
             //         client.sendMessage(message.from, "Your subscription is not over!\nWe will remind you when your subscription is about to expire")
             //     }
             //     return;
             // }
-            // const paymentResponse = await checkPayment(firstResponse.chat, client, message, true);
+            // const paymentResponse = await checkPayment(firstResponse.chat, rclient, message, true);
             // if (paymentResponse.success === false) {
-            //     paymentHandler(firstResponse.chat, client, message);
+            //     paymentHandler(firstResponse.chat, rclient, message);
             //     return;
             // }
             const suggestRegex = /\/suggest/i;
-            if (suggestRegex.test(message.body)) {
-                await suggestHandler(firstResponse.chat, client, message)
+            if (suggestRegex.test(message.payload.payload.text)) {
+                await suggestHandler(firstResponse.chat, rclient, message)
                 return;
             }
             // CREDITS TO SRMCHECK.ME FOR PROVIDING DATA
             const attRegex = /\/att/i;
-            if (attRegex.test(message.body)) {
-                await attHandler(firstResponse.chat, client, message)
+            if (attRegex.test(message.payload.payload.text)) {
+                await attHandler(firstResponse.chat, rclient, message)
                 return;
             }
             // CREDITS TO SRMCHECK.ME FOR PROVIDING DATA
             const ttRegex = /\/tt/i;
-            if (ttRegex.test(message.body)) {
-                await ttHandler(firstResponse.chat, client, message)
+            if (ttRegex.test(message.payload.payload.text)) {
+                await ttHandler(firstResponse.chat, rclient, message)
                 return;
             }
             // CREDITS TO SRMCHECK.ME FOR PROVIDING DATA
             const wttRegex = /\/wtt/i;
-            if (wttRegex.test(message.body)) {
-                await wttHandler(firstResponse.chat, client, message)
+            if (wttRegex.test(message.payload.payload.text)) {
+                await wttHandler(firstResponse.chat, rclient, message)
                 return;
             }
             // CREDITS TO WHAT'S IN MESS FOR PROVIDING THE DATA
             const messRegex = /\/mess/i;
-            if (messRegex.test(message.body)) {
-                await messHandler(client, message)
+            if (messRegex.test(message.payload.payload.text)) {
+                await messHandler(rclient, message)
                 return;
             }
             const advertieRegex = /\/advertise/i;
-            if (advertieRegex.test(message.body)) {
-                await advertiseHandler(client, message)
+            if (advertieRegex.test(message.payload.payload.text)) {
+                await advertiseHandler(rclient, message)
                 return;
             }
             const checkeveryoneRegex = /\/checkeveryone/i;
-            if (checkeveryoneRegex.test(message.body) && message.from === process.env.MY_PHONE) {
-                await checkEveryone(client, message)
+            if (checkeveryoneRegex.test(message.payload.payload.text) && message.payload.source === process.env.MY_PHONE) {
+                await checkEveryone(rclient)
                 return;
             }
             const everyoneRegex = /\/everyone/i;
-            if (everyoneRegex.test(message.body) && message.from === process.env.MY_PHONE) {
-                await advertiseEveryone(client, message)
+            if (everyoneRegex.test(message.payload.payload.text) && message.payload.source === process.env.MY_PHONE) {
+                await advertiseEveryone(rclient, message)
                 return;
             }
             else {
-                client.sendMessage(message.from, "Please type */help* to get available commands!")
+                rclient.set(message.payload.source, value + 1, { XX: true })
+                await rclient.disconnect()
+                // client.sendMessage(message.from, "Please type */help* to get available commands!")
                 return;
             }
         }
-    });
-
-    client.initialize();
+        else{
+            await rclient.disconnect()
+        }
+    }
 });
+
+
+app.listen(port, () => {
+    console.log(`Example app listening on port ${port}`)
+})

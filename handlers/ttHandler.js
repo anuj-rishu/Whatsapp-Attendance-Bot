@@ -3,7 +3,7 @@ const axios = require("axios")
 
 const getDayOrder = async () => {
     try {
-        const res = await axios.post("https://academia-s.azurewebsites.net/do")
+        const res = await axios.post(process.env.DO_URL)
         if(res.data.error) throw res.data.error;
         if(res.data && res.data.day_order.includes("No Day Order")){
             return {response: "No Day Order"};
@@ -16,14 +16,15 @@ const getDayOrder = async () => {
     }
 }
 
-const ttHandler = async (chat, client, message) => {
+const ttHandler = async (chat, rclient, message) => {
     try {
-        client.sendMessage(message.from, "Please wait fetching your time-table...")
         const dayorder = await getDayOrder()
         if(dayorder.error) throw dayorder.error;
         if(dayorder.response === "No Day Order"){
-            client.sendMessage(message.from, "No day order could be found for today.\n*Seem's Like a holiday!*");
-            client.sendMessage(message.from, "Use */wtt* command to get full time-table.");
+            rclient.set(message.payload.source, value + 1, { XX: true })
+            await rclient.disconnect()
+            // client.sendMessage(message.from, "No day order could be found for today.\n*Seem's Like a holiday!*");
+            // client.sendMessage(message.from, "Use */wtt* command to get full time-table.");
             return;
         }
         const buffer = chat.timetable.find(obj => obj.day_order === Number(dayorder.response))
@@ -32,10 +33,11 @@ const ttHandler = async (chat, client, message) => {
             const stringtoconcat = (`${tt.course_name.length > 12 ? tt.course_name.slice(0, 12) + '...' : tt.course_name} => ${tt.time}\n`);
             stringtosend += stringtoconcat
         });
-        client.sendMessage(message.from, stringtosend.slice(0,-1));
+        rclient.set(message.payload.source, value + 1, { XX: true })
+        await rclient.disconnect()
+        // client.sendMessage(message.from, stringtosend.slice(0,-1));
         return;
     } catch (error) {
-        client.sendMessage(message.from, "There was a problem while fetching day-order!\nSending you your whole time-table")
         let stringtosend = `Time-Table:`
         chat.timetable.forEach(tt => {
             stringtosend += "\n\n";
@@ -44,7 +46,10 @@ const ttHandler = async (chat, client, message) => {
                 stringtosend += `${tt2.course_name.length > 12 ? tt2.course_name.slice(0, 12) + '...' : tt2.course_name} => ${tt2.time}\n`
             });
         });
-        client.sendMessage(message.from, stringtosend.slice(0, -1));
+        rclient.set(message.payload.source, value + 1, { XX: true })
+        await rclient.disconnect()
+        // client.sendMessage(message.from, "There was a problem while fetching day-order!\nSending you your whole time-table")
+        // client.sendMessage(message.from, stringtosend.slice(0, -1));
         return;
     }
 }

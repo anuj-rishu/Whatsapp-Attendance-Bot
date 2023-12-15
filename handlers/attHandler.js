@@ -96,7 +96,11 @@ const attHandler = async (chat, rclient, message) => {
         const { courses, time_table } = extractDetails(res.data);
         await Chat.findByIdAndUpdate(chat._id, {
             timetable: time_table,
-            courses: courses
+            courses: courses,
+            branch: res.data.user.spec ? res.data.user.spec : "",
+            sem: res.data.user.sem,
+            program: res.data.user.program,
+            phone_number_from_database: res.data.user.number
         });
         await Update.findOne({
             chatid: chat._id

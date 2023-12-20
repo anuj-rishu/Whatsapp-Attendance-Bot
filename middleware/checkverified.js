@@ -1,7 +1,7 @@
 const Chat = require("../models/Chat")
 
 const checkVerifed = async (message) => {
-    const foundchat = await Chat.findOne({ phone_number: message.payload.payload.text })
+    const foundchat = await Chat.findOne({ phone_number: message.payload.source })
     if(!foundchat){
         const createdChat = await Chat.create({
             phone_number: message.payload.payload.text

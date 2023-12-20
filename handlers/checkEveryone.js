@@ -3,6 +3,8 @@ const axios = require('axios');
 const Chat = require('../models/Chat');
 const getSubjectsWithMoreAbsentHours = require('../utils/getSubjectsWithMoreAbsentHours');
 const checkPayment = require('../middleware/checkPayment');
+const SendMessage = require('../utils/sendMessage');
+const connection = require('../utils/redisConnection.js')
 
 function getCurrentTimeIndia() {
     const options = { timeZone: 'Asia/Kolkata', hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' };
@@ -11,7 +13,8 @@ function getCurrentTimeIndia() {
 }
 
 
-const checkEveryone = async (rclient) => {
+const checkEveryone = async (value) => {
+    const rclient = connection.Client;
     const allPeople = await Update.find({ __v: 0 });
     if (allPeople) {
         allPeople.forEach(async (people) => {
@@ -53,8 +56,8 @@ const checkEveryone = async (rclient) => {
                 }
                 const data = getSubjectsWithMoreAbsentHours(people.courses, res.data);
                 if (data.length <= 0) {
-                    rclient.set(people.from, value + 1, { XX: true })
-                    // client.sendMessage(people.from, `Yay! Attendance hasn't decreased since last checked!\nChecked on: ${getCurrentTimeIndia()}`);
+                    // rclient.set(people.from, value + 1, { XX: true })
+                    await SendMessage({to: message.payload.source, message: `Yay! Attendance hasn't decreased since last checked!\nChecked on: ${getCurrentTimeIndia()}`})
                 }
                 else {
                     let texttosend = "";
@@ -63,17 +66,16 @@ const checkEveryone = async (rclient) => {
                         texttosend += `Hours marked Absent: ${tt.difference_in_hours}\n\n`
                     })
                     texttosend += `Checked on: ${getCurrentTimeIndia()}`
-                    rclient.set(people.from, value + 1, { XX: true })
-                    // client.sendMessage(people.from, "Attendance Decreased!")
-                    // client.sendMessage(people.from, texttosend);
+                    // rclient.set(people.from, value + 1, { XX: true })
+                    await SendMessage({to: message.payload.source, message: `Attendance Decreased!\n${texttosend}`})
                 }
                 // }
             } catch (error) {
                 await Chat.findByIdAndUpdate(people.chatid, {
                     hasIssue: true
                 })
-                rclient.set(people.from, value + 1, { XX: true })
-                // client.sendMessage(people.from, "Sorry there was a problem checking your Attendance! Please verify your password again! Using */cp* command")
+                // rclient.set(people.from, value + 1, { XX: true })
+                await SendMessage({to: message.payload.source, message: `Sorry there was a problem checking your Attendance! Please verify your password again! Using */cp* command`})
             }
         });
         await rclient.disconnect()

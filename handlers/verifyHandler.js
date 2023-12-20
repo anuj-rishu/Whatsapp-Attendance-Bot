@@ -2,9 +2,12 @@ const axios = require('axios');
 const Chat = require('../models/Chat');
 const Update = require('../models/Update');
 const extractDetails = require("../utils/extractDetails");
+const SendMessage = require('../utils/sendMessage');
+const connection = require('../utils/redisConnection.js')
 
 
-const verifyHandler = async (chat, rclient, value, message) => {
+const verifyHandler = async (chat, value, message) => {
+    const rclient = connection.Client;
     const pattern = /\/verify (\w+) (\S+)/i;
     const match = message.payload.payload.text.match(pattern);
     if (match) {
@@ -19,7 +22,7 @@ const verifyHandler = async (chat, rclient, value, message) => {
             if (response.data.message && response.data.message === "Wrong email or password") {
                 rclient.set(message.payload.source, value + 1, { XX: true })
                 await rclient.disconnect()
-                // client.sendMessage(message.from, "*Please Enter your Academia Password.*\nYour NetId or Password seems to be incorrect!")
+                await SendMessage({to: message.payload.source, message: "*Please Enter your Academia Password.*\nYour NetId or Password seems to be incorrect!"})
                 return;
             }
             else {
@@ -80,21 +83,19 @@ const verifyHandler = async (chat, rclient, value, message) => {
                 })
                 rclient.set(message.payload.source, value + 1, { XX: true })
                 await rclient.disconnect()
-                // client.sendMessage(message.from, `Congrats! ${res.data.user.name} We have verified you. you will start receiving updates soon!`)
-                // client.sendMessage(message.from, "Type */help* to get all commands")
+                await SendMessage({to: message.payload.source, message: `Congrats! ${res.data.user.name} We have verified you. you will start receiving updates soon!\nThere is a rate limit on this bot, please dont send more than 10 messages in a day or you will get blocked.\nType */help* to get all commands`})
                 return;
             }
         } catch (error) {
             rclient.set(message.payload.source, value + 1, { XX: true })
             await rclient.disconnect()
-            // client.sendMessage(message.from, "Sorry there was a problem while verifying, Servers are down! Could you please try later?")
+            await SendMessage({to: message.payload.source, message: `Sorry there was a problem while verifying, Servers are down! Could you please try later?`})
             return;
         }
     } else {
         rclient.set(message.payload.source, value + 1, { XX: true })
         await rclient.disconnect()
-        // client.sendMessage(message.from, "Please use correct syntax to verify!\n\n*/verify {NetId} {Password}*")
-        // client.sendMessage(message.from, "Example:\n*/verify vg6796 Abc@123*")
+        await SendMessage({to: message.payload.source, message: `Please use correct syntax to verify!\n\n*/verify {NetId} {Password}*\nExample:\n*/verify vg6796 Abc@123*`})
         return;
     }
 }

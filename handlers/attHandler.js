@@ -2,12 +2,14 @@ const Chat = require("../models/Chat");
 const axios = require("axios");
 const getSubjectsWithMoreAbsentHours = require("../utils/getSubjectsWithMoreAbsentHours");
 const Update = require("../models/Update");
+const SendMessage = require('../utils/sendMessage');
 const extractDetails = require("../utils/extractDetails");
+const connection = require('../utils/redisConnection.js')
 
 function getRequired(e, t) {
     for (var n = 0; ;) {
         if (100 * (t + n) / (e + n) >= 75)
-            return n;
+        return n;
         n++
     }
 }
@@ -30,7 +32,8 @@ function getFinal(conductedHours, presentHours) {
     if (r2 === -1) return -1 * r1;
 }
 
-const attHandler = async (chat, rclient, message) => {
+const attHandler = async (chat, value, message) => {
+    const rclient = connection.Client;
     const attendance = chat.courses;
     try {
         let res
@@ -79,8 +82,7 @@ const attHandler = async (chat, rclient, message) => {
             });
             rclient.set(message.payload.source, value + 1, { XX: true })
             await rclient.disconnect()
-            // client.sendMessage(message.from, messagetosend.slice(0, -2))
-            // client.sendMessage(message.from, "Yay! Your Attendance was not decreased since last checked!")
+            await SendMessage({to: message.payload.source, message: `${messagetosend.slice(0, -2)}\nYay! Your Attendance was not decreased since last checked!`})
         }
         else {
             let texttosend = "";
@@ -90,8 +92,7 @@ const attHandler = async (chat, rclient, message) => {
             })
             rclient.set(message.payload.source, value + 1, { XX: true })
             await rclient.disconnect()
-            // client.sendMessage(message.from, texttosend.slice(0, -2));
-            // client.sendMessage(message.from, "Attendance Decreased!")
+            await SendMessage({to: message.payload.source, message: `${texttosend.slice(0, -2)}\nAttendance Decreased!`})
         }
         const { courses, time_table } = extractDetails(res.data);
         await Chat.findByIdAndUpdate(chat._id, {
@@ -120,9 +121,7 @@ const attHandler = async (chat, rclient, message) => {
         });
         rclient.set(message.payload.source, value + 1, { XX: true })
         await rclient.disconnect()
-        // client.sendMessage(message.from, "Could not fetch attendance, Showing you last attendance!");
-        client.sendMessage(message.from, "Please verify your password again, Use */cp* command")
-        client.sendMessage(message.from, messagetosend)
+        await SendMessage({to: message.payload.source, message: `Could not fetch attendance, Showing you last attendance!\n${messagetosend}\nPlease verify your password again, Use */cp* command`})
         return;
     }
 }

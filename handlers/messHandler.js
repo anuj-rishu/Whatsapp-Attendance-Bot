@@ -1,13 +1,15 @@
 const axios = require("axios");
 const Mess = require("../models/Mess");
+const SendMessage = require('../utils/sendMessage');
+const connection = require('../utils/redisConnection.js')
 
 const getDayandTime = () => {
     const indianTimeOffset = 5.5 * 60 * 60 * 1000;
     const now = new Date(Date.now() + indianTimeOffset);
-
+    
     const daysOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     let day = daysOfWeek[now.getUTCDay()];
-
+    
     const mealTimings = {
         Breakfast: { start: 21.5, end: 9 },
         Lunch: { start: 9, end: 13.5 },
@@ -30,7 +32,8 @@ const getDayandTime = () => {
     return { day, currentMeal };
 };
 
-const messHandler = async (rclient, message) => {
+const messHandler = async (value, message) => {
+    const rclient = connection.Client;
     try {
         const mess = await Mess.findOne({ __v: 0 })
         const { day, currentMeal } = getDayandTime();
@@ -55,7 +58,7 @@ const messHandler = async (rclient, message) => {
             stringtosend += `${day}: (${currentMeal})\n\n${array.join(', ')}`
             rclient.set(message.payload.source, value + 1, { XX: true })
             await rclient.disconnect()
-            // client.sendMessage(message.from, stringtosend)
+            await SendMessage({to: message.payload.source, message: stringtosend})
             return;
         }
         else if ((Date.now() - mess.updatedAt.getTime()) > 86400000) {
@@ -79,7 +82,7 @@ const messHandler = async (rclient, message) => {
             stringtosend += `${day}: (${currentMeal})\n\n${array.join(', ')}`
             rclient.set(message.payload.source, value + 1, { XX: true })
             await rclient.disconnect()
-            // client.sendMessage(message.from, stringtosend)
+            await SendMessage({to: message.payload.source, message: stringtosend})
             return;
         }
         else {
@@ -92,14 +95,14 @@ const messHandler = async (rclient, message) => {
             stringtosend += `${day}: (${currentMeal})\n\n${array.join(', ')}`
             rclient.set(message.payload.source, value + 1, { XX: true })
             await rclient.disconnect()
-            // client.sendMessage(message.from, stringtosend)
+            await SendMessage({to: message.payload.source, message: stringtosend})
             return;
         }
     } catch (error) {
         const stringtosend = `There was a error fetching Mess details, Please try again!`
         rclient.set(message.payload.source, value + 1, { XX: true })
         await rclient.disconnect()
-        // client.sendMessage(message.from, stringtosend)
+        await SendMessage({to: message.payload.source, message: stringtosend})
         return;
     }
 }

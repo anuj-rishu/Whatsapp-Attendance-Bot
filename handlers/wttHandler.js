@@ -1,4 +1,8 @@
-const wttHandler = async (chat, rclient, message) => {
+const SendMessage = require('../utils/sendMessage');
+const connection = require('../utils/redisConnection.js')
+
+const wttHandler = async (chat, value, message) => {
+    const rclient = connection.Client;
     try {
         let stringtosend = `Time-Table:`
         chat.timetable.forEach(tt => {
@@ -10,12 +14,12 @@ const wttHandler = async (chat, rclient, message) => {
         });
         rclient.set(message.payload.source, value + 1, { XX: true })
         await rclient.disconnect()
-        // client.sendMessage(message.from, stringtosend);
+        await SendMessage({to: message.payload.source, message: stringtosend})
         return;
     } catch (error) {
         rclient.set(message.payload.source, value + 1, { XX: true })
         await rclient.disconnect()
-        // client.sendMessage("There was some problem, Please try again!")
+        await SendMessage({to: message.payload.source, message: `There was some problem, Please try again!`})
         return;
     }
 }

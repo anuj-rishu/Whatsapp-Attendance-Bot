@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const firstcheck = require('./middleware/firstcheck.js');
 const checkVerifed = require('./middleware/checkverified');
 const paymentHandler = require('./handlers/paymentHandler');
@@ -18,7 +17,9 @@ const messHandler = require('./handlers/messHandler');
 const express = require('express')
 const bodyParser = require('body-parser');
 const checkSpam = require('./middleware/checkSpam.js');
-const { createClient } = require('redis')
+const SendMessage = require('./utils/sendMessage.js');
+const connectDb = require('./utils/connectDb.js')
+const connection = require('./utils/redisConnection.js')
 require('dotenv').config()
 
 /**
@@ -43,22 +44,19 @@ require('dotenv').config()
 const app = express()
 app.use(bodyParser.json());
 const port = 3000
-const client = createClient({
-    password: process.env.REDIS_PASS,
-    socket: {
-        host: 'redis-16896.c264.ap-south-1-1.ec2.cloud.redislabs.com',
-        port: 16896
-    }
-});
+connectDb()
+
+// const connection = new RedisClient()
+connection.connect()
+
 
 app.post('/recievemessage', async (req, res) => {
     /** @type {MessageType} */
     const message = req.body;
     res.json({ success: true }).status(200)
-    const rclient = await client.connect();
-    const {isSpam, spamValue} = await checkSpam(rclient, message)
-    if (!isSpam) {
-        if(message.type == "text"){
+    if (message.type == "message") {
+        const { isSpam, spamValue } = await checkSpam( message)
+        if(!isSpam && message.payload.type == 'text'){
             const verifyRegex = /\/verify/i;
             if (verifyRegex.test(message.payload.payload.text)) {
                 const res = await checkVerifed(message)
@@ -67,93 +65,93 @@ app.post('/recievemessage', async (req, res) => {
                     return;
                 }
                 else {
-                    verifyHandler(res.chat, rclient, spamValue ,message)
+                    verifyHandler(res.chat,  spamValue ,message)
                     return;
                 }
             }
-            const firstResponse = await firstcheck(rclient, message);
-            if (firstResponse.message === "Chat created") return;
+            const firstResponse = await firstcheck( spamValue, message);
+            if (firstResponse.message === "Chat created" || firstResponse.message == "Chat found") return;
             const helpRegex = /\/help/i;
             if (helpRegex.test(message.payload.payload.text)) {
-                helpHandler(rclient, message);
+                helpHandler( spamValue, message);
                 return;
             }
             const changePassRegex = /\/cp/i;
             if (changePassRegex.test(message.payload.payload.text)) {
-                changePassHandler(firstResponse.chat, rclient, message);
+                changePassHandler(firstResponse.chat,  spamValue, message);
                 return;
             }
-            const hasIssueCheck = await issueCheck(firstResponse.chat, rclient, message);
+            const hasIssueCheck = await issueCheck(firstResponse.chat,  spamValue, message);
             if (hasIssueCheck.success === false) return;
             // const paymentRegex = /\/payment/i;
             // if (paymentRegex.test(message.payload.payload.text)) {
-            //     const res = await checkPayment(firstResponse.chat, rclient, message, false)
-            //     if (res.success == false || res.partial == false) {
-            //         paymentHandler(firstResponse.chat, rclient, message);
+            //     const res = await checkPayment(firstResponse.chat,  message, false)
+            //     if (res.success == false  || message.type ==  res.partial == false) {
+            //         paymentHandler(firstResponse.chat,  message);
             //     }
             //     else if (res.success && res.partial) {
             //         client.sendMessage(message.from, "Your subscription is not over!\nWe will remind you when your subscription is about to expire")
             //     }
             //     return;
             // }
-            // const paymentResponse = await checkPayment(firstResponse.chat, rclient, message, true);
+            // const paymentResponse = await checkPayment(firstResponse.chat,  message, true);
             // if (paymentResponse.success === false) {
-            //     paymentHandler(firstResponse.chat, rclient, message);
+            //     paymentHandler(firstResponse.chat,  message);
             //     return;
             // }
             const suggestRegex = /\/suggest/i;
             if (suggestRegex.test(message.payload.payload.text)) {
-                await suggestHandler(firstResponse.chat, rclient, message)
+                await suggestHandler(firstResponse.chat,  spamValue, message)
                 return;
             }
             // CREDITS TO SRMCHECK.ME FOR PROVIDING DATA
             const attRegex = /\/att/i;
             if (attRegex.test(message.payload.payload.text)) {
-                await attHandler(firstResponse.chat, rclient, message)
+                await attHandler(firstResponse.chat,  spamValue, message)
                 return;
             }
             // CREDITS TO SRMCHECK.ME FOR PROVIDING DATA
             const ttRegex = /\/tt/i;
             if (ttRegex.test(message.payload.payload.text)) {
-                await ttHandler(firstResponse.chat, rclient, message)
+                await ttHandler(firstResponse.chat,  spamValue, message)
                 return;
             }
             // CREDITS TO SRMCHECK.ME FOR PROVIDING DATA
             const wttRegex = /\/wtt/i;
             if (wttRegex.test(message.payload.payload.text)) {
-                await wttHandler(firstResponse.chat, rclient, message)
+                await wttHandler(firstResponse.chat,  spamValue, message)
                 return;
             }
             // CREDITS TO WHAT'S IN MESS FOR PROVIDING THE DATA
             const messRegex = /\/mess/i;
             if (messRegex.test(message.payload.payload.text)) {
-                await messHandler(rclient, message)
+                await messHandler( spamValue, message)
                 return;
             }
             const advertieRegex = /\/advertise/i;
             if (advertieRegex.test(message.payload.payload.text)) {
-                await advertiseHandler(rclient, message)
+                await advertiseHandler( spamValue,message)
                 return;
             }
             const checkeveryoneRegex = /\/checkeveryone/i;
             if (checkeveryoneRegex.test(message.payload.payload.text) && message.payload.source === process.env.MY_PHONE) {
-                await checkEveryone(rclient)
+                await checkEveryone( spamValue)
                 return;
             }
             const everyoneRegex = /\/everyone/i;
             if (everyoneRegex.test(message.payload.payload.text) && message.payload.source === process.env.MY_PHONE) {
-                await advertiseEveryone(rclient, message)
+                await advertiseEveryone( spamValue, message)
                 return;
             }
             else {
-                rclient.set(message.payload.source, value + 1, { XX: true })
-                await rclient.disconnect()
-                // client.sendMessage(message.from, "Please type */help* to get available commands!")
+                connection.Client.set(message.payload.source, value + 1, { XX: true })
+                await connection.Client.disconnect()
+                await SendMessage({to: message.payload.source, message: `Please type */help* to get available commands!`})
                 return;
             }
         }
         else{
-            await rclient.disconnect()
+            await connection.Client.disconnect()
         }
     }
 });

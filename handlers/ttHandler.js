@@ -1,5 +1,7 @@
 const Chat = require("../models/Chat");
 const axios = require("axios")
+const SendMessage = require('../utils/sendMessage');
+const connection = require('../utils/redisConnection.js')
 
 const getDayOrder = async () => {
     try {
@@ -16,15 +18,15 @@ const getDayOrder = async () => {
     }
 }
 
-const ttHandler = async (chat, rclient, message) => {
+const ttHandler = async (chat, value, message) => {
+    const rclient = connection.Client;
     try {
         const dayorder = await getDayOrder()
         if(dayorder.error) throw dayorder.error;
         if(dayorder.response === "No Day Order"){
             rclient.set(message.payload.source, value + 1, { XX: true })
             await rclient.disconnect()
-            // client.sendMessage(message.from, "No day order could be found for today.\n*Seem's Like a holiday!*");
-            // client.sendMessage(message.from, "Use */wtt* command to get full time-table.");
+            await SendMessage({to: message.payload.source, message: `No day order could be found for today.\n*Seem's Like a holiday!*\nUse */wtt* command to get full time-table.`})
             return;
         }
         const buffer = chat.timetable.find(obj => obj.day_order === Number(dayorder.response))
@@ -35,7 +37,7 @@ const ttHandler = async (chat, rclient, message) => {
         });
         rclient.set(message.payload.source, value + 1, { XX: true })
         await rclient.disconnect()
-        // client.sendMessage(message.from, stringtosend.slice(0,-1));
+        await SendMessage({to: message.payload.source, message: stringtosend.slice(0,-1)})
         return;
     } catch (error) {
         let stringtosend = `Time-Table:`
@@ -48,8 +50,7 @@ const ttHandler = async (chat, rclient, message) => {
         });
         rclient.set(message.payload.source, value + 1, { XX: true })
         await rclient.disconnect()
-        // client.sendMessage(message.from, "There was a problem while fetching day-order!\nSending you your whole time-table")
-        // client.sendMessage(message.from, stringtosend.slice(0, -1));
+        await SendMessage({to: message.payload.source, message: `There was a problem while fetching day-order!\nSending you your whole time-table\n${stringtosend.slice(0, -1)}`})
         return;
     }
 }

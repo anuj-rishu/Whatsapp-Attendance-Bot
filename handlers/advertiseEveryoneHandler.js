@@ -1,12 +1,15 @@
 const Update = require("../models/Update")
+const SendMessage = require('../utils/sendMessage');
+const connection = require('../utils/redisConnection.js')
 
-const advertiseEveryone = async (rclient, message) => {
+const advertiseEveryone = async (value, message) => {
+    const rclient = connection.Client;
     const pattern = /\/everyone\s+(.+)/i;
     const match = message.body.match(pattern);
     if(match === null){
         rclient.set(message.payload.source, value + 1, { XX: true })
         await rclient.disconnect()
-        // client.sendMessage(message.from, `Type:\n*/Everyone {Your Message}*`)
+        await SendMessage({to: message.payload.source, message: `Type:\n*/Everyone {Your Message}*`})
         return;
     }
     const peoples = await Update.find({__v: 0})
@@ -33,15 +36,12 @@ const advertiseEveryone = async (rclient, message) => {
         // else{
             peoples.forEach(async (people) => {
                 const messagetosend = `${match[1]}`
-                rclient.set(people.from, value + 1, { XX: true })
-                // client.sendMessage(people.from, messagetosend)
+                // rclient.set(people.from, value + 1, { XX: true })
+                await SendMessage({to: people.from, message: messagetosend})
             });
             await rclient.disconnect()
             return;
         // }
-    }
-    else{
-        return;  
     }
 }
 

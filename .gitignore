@@ -2,3 +2,4 @@
 /.wwebjs*
 .env
 .awsenv
+Resources/

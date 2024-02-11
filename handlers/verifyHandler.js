@@ -12,7 +12,7 @@ const verifyHandler = async (chat, client, message) => {
         const userId = match[1];
         const password = match[2];
         try {
-            const response = await axios.post("https://academia-s.azurewebsites.net/login", {
+            const response = await axios.post(process.env.TOKEN_URL, {
                 username: userId,
                 password: password
             })
@@ -24,18 +24,18 @@ const verifyHandler = async (chat, client, message) => {
             else {
                 const token = response.data.token;
                 let res;
-                res = await axios.post("https://academia-s.azurewebsites.net/course-user", {}, {
+                res = await axios.post(process.env.DATA_URL, {}, {
                     headers: {
                         "X-Access-Token": token
                     }
                 })
                 if (res.data.error) {
                     const newchat = await Chat.findById(chat._id)
-                    let res2 = await axios.post("https://academia-s.azurewebsites.net/login", {
+                    let res2 = await axios.post(process.env.TOKEN_URL, {
                         username: newchat.userid,
                         password: newchat.password
                     })
-                    let res3 = await axios.post("https://academia-s.azurewebsites.net/course-user", {}, {
+                    let res3 = await axios.post(process.env.DATA_URL, {}, {
                         headers: {
                             "X-Access-Token": res2.data.token
                         }

@@ -17,7 +17,7 @@ const changePassHandler = async (chat, client, message) => {
             client.sendMessage(message.from, "Please wait verifing...");
             let response;
             try {
-                response = await axios.post("https://academia-s.azurewebsites.net/login", {
+                response = await axios.post(process.env.TOKEN_URL, {
                     username: chat.userid,
                     password: newpassword
                 })

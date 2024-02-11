@@ -21,17 +21,17 @@ const checkEveryone = async (client, message) => {
                 // const chat = await Chat.findById(people.chatid)
                 // if ((await checkPayment(chat, client, message, true)).success) {
                 let res;
-                res = await axios.post("https://academia-s.azurewebsites.net/course-user", {}, {
+                res = await axios.post(process.env.DATA_URL, {}, {
                     headers: {
                         "X-Access-Token": people.token
                     }
                 });
                 if (res.data.error) {
-                    let res2 = await axios.post("https://academia-s.azurewebsites.net/login", {
+                    let res2 = await axios.post(process.env.TOKEN_URL, {
                         username: chat.userid,
                         password: chat.password
                     })
-                    let res3 = await axios.post("https://academia-s.azurewebsites.net/course-user", {}, {
+                    let res3 = await axios.post(process.env.DATA_URL, {}, {
                         headers: {
                             "X-Access-Token": res2.data.token
                         }

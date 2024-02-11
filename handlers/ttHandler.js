@@ -3,7 +3,7 @@ const axios = require("axios")
 
 const getDayOrder = async () => {
     try {
-        const res = await axios.post("https://academia-s.azurewebsites.net/do")
+        const res = await axios.post(process.env.DO_URL)
         if(res.data.error) throw res.data.error;
         if(res.data && res.data.day_order.includes("No Day Order")){
             return {response: "No Day Order"};

@@ -35,18 +35,18 @@ const attHandler = async (chat, client, message) => {
     try {
         client.sendMessage(message.from, "Please wait fetching your attendance...")
         let res
-        res = await axios.post("https://academia-s.azurewebsites.net/course-user", {}, {
+        res = await axios.post(process.env.DATA_URL, {}, {
             headers: {
                 "X-Access-Token": chat.token
             }
         })
         if (res.data.error) {
             const newchat = await Chat.findById(chat._id)
-            let res2 = await axios.post("https://academia-s.azurewebsites.net/login", {
+            let res2 = await axios.post(process.env.TOKEN_URL, {
                 username: newchat.userid,
                 password: newchat.password
             })
-            let res3 = await axios.post("https://academia-s.azurewebsites.net/course-user", {}, {
+            let res3 = await axios.post(process.env.DATA_URL, {}, {
                 headers: {
                     "X-Access-Token": res2.data.token
                 }

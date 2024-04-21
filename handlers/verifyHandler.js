@@ -82,7 +82,8 @@ const verifyHandler = async (chat, message) => {
                 })
                 client.incr(message.payload.source)
                 // await client.disconnect()
-                await SendMessage({to: message.payload.source, message: `Congrats! ${res.data.user.name} We have verified you. you will start receiving updates soon!\nThere is a rate limit on this bot, please dont send more than 10 messages in a day or you will get blocked.\nType */help* to get all commands`})
+                await SendMessage({to: message.payload.source, message: `Congrats! ${res.data.user.name} We have verified you. you will start receiving updates soon!\nThere is a rate limit on this bot, please dont send more than 10 messages in a day or you will get blocked.\n\n*/att*                To get your attendance\n*/tt*                  To get today's time-table\n*/wtt*               To get your whole time-table\n*/mess*           To get what's in mess\n*/suggest*      To suggest a feature\n*/advertise*    To advertise`})
+                // await SendMessage({to: message.payload.source, message: `Congrats! ${res.data.user.name} We have verified you. you will start receiving updates soon!\nThere is a rate limit on this bot, please dont send more than 10 messages in a day or you will get blocked.\nType */help* to get all commands`})
                 return;
             }
         } catch (error) {

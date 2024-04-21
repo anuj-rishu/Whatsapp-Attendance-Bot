@@ -1,14 +1,13 @@
 const Update = require("../models/Update")
 const SendMessage = require('../utils/sendMessage');
-const connection = require('../utils/redisConnection.js')
+const client = require('../utils/redisConnection.js')
 
-const advertiseEveryone = async (value, message) => {
-    const rclient = connection.Client;
+const advertiseEveryone = async (message) => {
     const pattern = /\/everyone\s+(.+)/i;
     const match = message.body.match(pattern);
     if(match === null){
-        rclient.set(message.payload.source, value + 1, { XX: true })
-        await rclient.disconnect()
+        client.incr(message.payload.source)
+        // await client.disconnect()
         await SendMessage({to: message.payload.source, message: `Type:\n*/Everyone {Your Message}*`})
         return;
     }
@@ -25,8 +24,8 @@ const advertiseEveryone = async (value, message) => {
         //         else{
         //             peoples.forEach(people => {
         //                 const messagetosend = `${match[1]}`
-        //                 rclient.set(message.payload.source, value + 1, { XX: true })
-        //                 await rclient.disconnect()
+        //                 client.incr(message.payload.source)
+        //                 await client.disconnect()
         //                 client.sendMessage(people.from, messagetosend)
         //             });
         //             return;
@@ -36,10 +35,10 @@ const advertiseEveryone = async (value, message) => {
         // else{
             peoples.forEach(async (people) => {
                 const messagetosend = `${match[1]}`
-                // rclient.set(people.from, value + 1, { XX: true })
+                // client.incr(people.from)
                 await SendMessage({to: people.from, message: messagetosend})
             });
-            await rclient.disconnect()
+            // await client.disconnect()
             return;
         // }
     }

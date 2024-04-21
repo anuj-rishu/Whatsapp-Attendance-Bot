@@ -1,7 +1,7 @@
 const axios = require("axios");
 const Mess = require("../models/Mess");
 const SendMessage = require('../utils/sendMessage');
-const connection = require('../utils/redisConnection.js')
+const client = require('../utils/redisConnection.js')
 
 const getDayandTime = () => {
     const indianTimeOffset = 5.5 * 60 * 60 * 1000;
@@ -32,8 +32,7 @@ const getDayandTime = () => {
     return { day, currentMeal };
 };
 
-const messHandler = async (value, message) => {
-    const rclient = connection.Client;
+const messHandler = async ( message) => {
     try {
         const mess = await Mess.findOne({ __v: 0 })
         const { day, currentMeal } = getDayandTime();
@@ -56,8 +55,8 @@ const messHandler = async (value, message) => {
             if(currentMeal == "Snacks") {stringtosend += "[4:30 PM - 5:30 PM]\n"}
             if(currentMeal == "Dinner") {stringtosend += "[7:30 PM - 9:00 PM]\n"}
             stringtosend += `${day}: (${currentMeal})\n\n${array.join(', ')}`
-            rclient.set(message.payload.source, value + 1, { XX: true })
-            await rclient.disconnect()
+            client.incr(message.payload.source)
+            // await client.disconnect()
             await SendMessage({to: message.payload.source, message: stringtosend})
             return;
         }
@@ -80,8 +79,8 @@ const messHandler = async (value, message) => {
             if(currentMeal == "Snacks") {stringtosend += "[4:30 PM - 5:30 PM]\n"}
             if(currentMeal == "Dinner") {stringtosend += "[7:30 PM - 9:00 PM]\n"}
             stringtosend += `${day}: (${currentMeal})\n\n${array.join(', ')}`
-            rclient.set(message.payload.source, value + 1, { XX: true })
-            await rclient.disconnect()
+            client.incr(message.payload.source)
+            // await client.disconnect()
             await SendMessage({to: message.payload.source, message: stringtosend})
             return;
         }
@@ -93,15 +92,15 @@ const messHandler = async (value, message) => {
             if(currentMeal == "Snacks") {stringtosend += "[4:30 PM - 5:30 PM]\n"}
             if(currentMeal == "Dinner") {stringtosend += "[7:30 PM - 9:00 PM]\n"}
             stringtosend += `${day}: (${currentMeal})\n\n${array.join(', ')}`
-            rclient.set(message.payload.source, value + 1, { XX: true })
-            await rclient.disconnect()
+            client.incr(message.payload.source)
+            // await client.disconnect()
             await SendMessage({to: message.payload.source, message: stringtosend})
             return;
         }
     } catch (error) {
         const stringtosend = `There was a error fetching Mess details, Please try again!`
-        rclient.set(message.payload.source, value + 1, { XX: true })
-        await rclient.disconnect()
+        client.incr(message.payload.source)
+        // await client.disconnect()
         await SendMessage({to: message.payload.source, message: stringtosend})
         return;
     }

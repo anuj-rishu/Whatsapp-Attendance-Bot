@@ -4,7 +4,7 @@ const getSubjectsWithMoreAbsentHours = require("../utils/getSubjectsWithMoreAbse
 const Update = require("../models/Update");
 const SendMessage = require('../utils/sendMessage');
 const extractDetails = require("../utils/extractDetails");
-const connection = require('../utils/redisConnection.js')
+const client = require('../utils/redisConnection.js')
 
 function getRequired(e, t) {
     for (var n = 0; ;) {
@@ -32,23 +32,22 @@ function getFinal(conductedHours, presentHours) {
     if (r2 === -1) return -1 * r1;
 }
 
-const attHandler = async (chat, value, message) => {
-    const rclient = connection.Client;
+const attHandler = async (chat, message) => {
     const attendance = chat.courses;
     try {
         let res
-        res = await axios.post(process.env.DATA_URL, {}, {
+        res = await axios.post(process.env.SRM_USER_URL, {}, {
             headers: {
                 "X-Access-Token": chat.token
             }
         })
         if (res.data.error) {
             const newchat = await Chat.findById(chat._id)
-            let res2 = await axios.post(process.env.TOKEN_URL, {
+            let res2 = await axios.post(process.env.SRM_TOKEN_URL, {
                 username: newchat.userid,
                 password: newchat.password
             })
-            let res3 = await axios.post(process.env.DATA_URL, {}, {
+            let res3 = await axios.post(process.env.SRM_USER_URL, {}, {
                 headers: {
                     "X-Access-Token": res2.data.token
                 }
@@ -80,8 +79,8 @@ const attHandler = async (chat, value, message) => {
                 const marorreq = getFinal(Object.conducted_hours, Object.conducted_hours - Object.absent_hours)
                 messagetosend += `${marorreq >= 0 ? `Margin:*${marorreq}*` : `Required:*${-1 * marorreq}*`}  Abs:*${Object.absent_hours}*  %:*${Math.round(((Object.conducted_hours - Object.absent_hours) * 100) / Object.conducted_hours)}*\n\n`
             });
-            rclient.set(message.payload.source, value + 1, { XX: true })
-            await rclient.disconnect()
+            client.incr(message.payload.source)
+            // await client.disconnect()
             await SendMessage({to: message.payload.source, message: `${messagetosend.slice(0, -2)}\nYay! Your Attendance was not decreased since last checked!`})
         }
         else {
@@ -90,8 +89,8 @@ const attHandler = async (chat, value, message) => {
                 texttosend += tt.subject_name.length > 32 ? `${tt.subject_name.slice(0, 20)}... ${tt.subject_name.slice(-8)}\n` : `${tt.subject_name}\n`
                 texttosend += `Hours marked Absent: ${tt.difference_in_hours}\n\n`
             })
-            rclient.set(message.payload.source, value + 1, { XX: true })
-            await rclient.disconnect()
+            client.incr(message.payload.source)
+            // await client.disconnect()
             await SendMessage({to: message.payload.source, message: `${texttosend.slice(0, -2)}\nAttendance Decreased!`})
         }
         const { courses, time_table } = extractDetails(res.data);
@@ -119,8 +118,8 @@ const attHandler = async (chat, value, message) => {
         await Chat.findByIdAndUpdate(chat._id, {
             hasIssue: true
         });
-        rclient.set(message.payload.source, value + 1, { XX: true })
-        await rclient.disconnect()
+        client.incr(message.payload.source)
+        // await client.disconnect()
         await SendMessage({to: message.payload.source, message: `Could not fetch attendance, Showing you last attendance!\n${messagetosend}\nPlease verify your password again, Use */cp* command`})
         return;
     }

@@ -1,14 +1,13 @@
 const SendMessage = require('../utils/sendMessage');
-const connection = require('../utils/redisConnection.js')
+const client = require('../utils/redisConnection.js')
 
-const issueCheck = async (chat, value, message) => {
-    const rclient = connection.Client;
+const issueCheck = async (chat, message) => {
     if(!chat.hasIssue){
         return {success: true}
     }
     else{
-        rclient.set(message.payload.source, value + 1, { XX: true })
-        await rclient.disconnect()
+        client.incr(message.payload.source)
+        // await client.disconnect()
         await SendMessage({to: message.payload.source, message: `We have detected a Issue with your account\n\nPlease use */cp* command to change your password`})
         return {success: false}
     }

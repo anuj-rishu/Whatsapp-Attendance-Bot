@@ -1,5 +1,7 @@
 const SendMessage = require('../utils/sendMessage');
-const connection = require('../utils/redisConnection.js')
+const client = require('../utils/redisConnection.js')
+const axios = require('axios').default;
+require('dotenv').config()
 
 /**
  * @typedef {Object} MessageType
@@ -19,57 +21,62 @@ const connection = require('../utils/redisConnection.js')
  * @property {string} payload.sender.country_code - The country code of the sender.
  * @property {string} payload.sender.dial_code - The dial code of the sender.
  */
-const axios = require('axios').default;
-require('dotenv').config()
 
 /**
  * @param {MessageType} message - The message to check.
- * @returns {Promise<boolean>}
+ * @returns {Promise<[boolean, number]>}
  */
-const checkSpam = async ( message) => {
-    const client = connection.Client;
+const checkSpam = async (message) => {
     const value = Number(await client.get(message.payload.source))
-    if(value !== null){
-        if(value <= 15){
-            await client.set(message.payload.source, value + 1, {XX: true})
-            return false, value+1;
-        }
-        else if(value > 15 && value < 25){
-            await client.set(message.payload.source, value + 2, {XX: true})
-            await SendMessage({to: message.payload.source, message: "There is a rate limit, Please do not send any more messages in this day or you will get banned!"})
-            return false, value+2;
-        }
-        else{
-            await client.disconnect()
-            const data = new URLSearchParams();
-            data.append('phone', message.payload.source);
-            data.append('block', 'true');
-            try {
-                await axios.put("https://api.gupshup.io/sm/api/v1/app/block/SrmAttendanceBot", data, {
-                    headers: {
-                        'apikey': process.env.GUPSHUP_KEY,
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    }
-                })
-            } catch (error) {
-                try {
-                    await axios.put("https://api.gupshup.io/sm/api/v1/app/block/SrmAttendanceBot", data, {
-                        headers: {
-                            'apikey': process.env.GUPSHUP_KEY,
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        }
-                    })
-                } catch (error) {
-                    await SendMessage({to: process.env.MY_PHONE, message: `Block this number: ${message.payload.source} !!!`})
-                }
+    if (value !== null && value !== 0) {
+        if (value <= 20) {
+            await client.incr(message.payload.source)
+            return {
+                isSpam: false,
+                value: value + 1
             }
-            return true, 31;
+        }
+        else if (value > 20 && value < 25) {
+            await client.incrby(message.payload.source, 2)
+            await SendMessage({ to: message.payload.source, message: "There is a rate limit, Please do not send any more messages in this day or you will get banned!!!" })
+            return {
+                isSpam: false,
+                value: value + 2
+            }
+        }
+        else {
+            await blockUser(message.payload.source)
+            // client.disconnect()
+            return {
+                isSpam: true,
+                value: 26
+            }
         }
     }
-    else{
-        await client.set(message.payload.source, 1, {NX: true, EXAT: message.timestamp + 86400})
-        return false, 1;
+    else {
+        await client.setex(message.payload.source, 86400, 1)
+        return {
+            isSpam: false,
+            value: 1
+        }
     }
 };
 
-module.exports = checkSpam
+const blockUser = async (phone) => {
+    const data = new URLSearchParams();
+    data.append('phone', phone);
+    data.append('block', 'true');
+    try {
+        const res = await axios.put(`${process.env.BLOCK_URL}/${process.env.GUPSHUP_APP_NAME}`, data, {
+            headers: {
+                'apikey': process.env.GUPSHUP_KEY,
+                'Content-Type': 'application/x-www-form-urlencoded'
+            }
+        })
+        return res.data
+    } catch (error) {
+        await SendMessage({ to: process.env.MY_PHONE, message: `Block this number: ${phone} !!!` })
+    }
+}
+
+module.exports = checkSpam, { blockUser }

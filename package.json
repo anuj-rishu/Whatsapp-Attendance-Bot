@@ -13,10 +13,10 @@
     "axios": "^1.5.0",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "ioredis": "^5.4.1",
     "mongoose": "^7.5.1",
     "nodemon": "^3.0.1",
     "qrcode-terminal": "^0.12.0",
-    "redis": "^4.6.11",
     "whatsapp-web.js": "^1.22.1",
     "wwebjs-mongo": "^1.1.0"
   }

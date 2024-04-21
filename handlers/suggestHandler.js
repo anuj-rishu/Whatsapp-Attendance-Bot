@@ -1,21 +1,20 @@
 const SendMessage = require('../utils/sendMessage');
-const connection = require('../utils/redisConnection.js')
+const client = require('../utils/redisConnection.js')
 
-const suggestHandler = async (chat, value, message) => {
-    const rclient = connection.Client;
+const suggestHandler = async (chat, message) => {
     const pattern = /\/suggest\s+(.+)/i;
     const match = message.body.match(pattern);
     if(match === null){
-        rclient.set(message.payload.source, value + 1, { XX: true })
-        await rclient.disconnect()
+        client.incr(message.payload.source)
+        // await client.disconnect()
         await SendMessage({to: message.payload.source, message: `Type:\n*/suggest* {Your Suggestion}`})
         return;
     }
     else if (match) {
         const response = match[1];
         let prefix = "Suggestion: "
-        rclient.set(message.payload.source, value + 2, { XX: true })
-        await rclient.disconnect()
+        client.incrby(message.payload.source, 2)
+        // await client.disconnect()
         await SendMessage({to: process.env.MY_PHONE, message: prefix += response})
         await SendMessage({to: message.payload.source, message: `Your suggestion was submitted!`})
         return;

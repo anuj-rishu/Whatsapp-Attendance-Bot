@@ -3,42 +3,41 @@ const Chat = require('../models/Chat');
 const Update = require('../models/Update');
 const extractDetails = require("../utils/extractDetails");
 const SendMessage = require('../utils/sendMessage');
-const connection = require('../utils/redisConnection.js')
+const client = require('../utils/redisConnection.js')
 
 
-const verifyHandler = async (chat, value, message) => {
-    const rclient = connection.Client;
+const verifyHandler = async (chat, message) => {
     const pattern = /\/verify (\w+) (\S+)/i;
     const match = message.payload.payload.text.match(pattern);
     if (match) {
         const userId = match[1];
         const password = match[2];
         try {
-            const response = await axios.post(process.env.TOKEN_URL, {
+            const response = await axios.post(process.env.SRM_TOKEN_URL, {
                 username: userId,
                 password: password
             })
             if (!response.data) throw response;
             if (response.data.message && response.data.message === "Wrong email or password") {
-                rclient.set(message.payload.source, value + 1, { XX: true })
-                await rclient.disconnect()
+                client.incr(message.payload.source)
+                // await client.disconnect()
                 await SendMessage({to: message.payload.source, message: "*Please Enter your Academia Password.*\nYour NetId or Password seems to be incorrect!"})
                 return;
             }
             else {
                 let token = response.data.token;
                 let res;
-                res = await axios.post(process.env.DATA_URL, {}, {
+                res = await axios.post(process.env.SRM_USER_URL, {}, {
                     headers: {
                         "X-Access-Token": token
                     }
                 })
                 if (res.data.error) {
-                    let res2 = await axios.post(process.env.TOKEN_URL, {
+                    let res2 = await axios.post(process.env.SRM_TOKEN_URL, {
                         username: userId,
                         password: password
                     })
-                    let res3 = await axios.post(process.env.DATA_URL, {}, {
+                    let res3 = await axios.post(process.env.SRM_USER_URL, {}, {
                         headers: {
                             "X-Access-Token": res2.data.token
                         }
@@ -81,20 +80,21 @@ const verifyHandler = async (chat, value, message) => {
                     courses,
                     from: message.payload.source
                 })
-                rclient.set(message.payload.source, value + 1, { XX: true })
-                await rclient.disconnect()
+                client.incr(message.payload.source)
+                // await client.disconnect()
                 await SendMessage({to: message.payload.source, message: `Congrats! ${res.data.user.name} We have verified you. you will start receiving updates soon!\nThere is a rate limit on this bot, please dont send more than 10 messages in a day or you will get blocked.\nType */help* to get all commands`})
                 return;
             }
         } catch (error) {
-            rclient.set(message.payload.source, value + 1, { XX: true })
-            await rclient.disconnect()
+            console.log(error)
+            client.incr(message.payload.source)
+            // await client.disconnect()
             await SendMessage({to: message.payload.source, message: `Sorry there was a problem while verifying, Servers are down! Could you please try later?`})
             return;
         }
     } else {
-        rclient.set(message.payload.source, value + 1, { XX: true })
-        await rclient.disconnect()
+        client.incr(message.payload.source)
+        // await client.disconnect()
         await SendMessage({to: message.payload.source, message: `Please use correct syntax to verify!\n\n*/verify {NetId} {Password}*\nExample:\n*/verify vg6796 Abc@123*`})
         return;
     }

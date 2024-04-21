@@ -141,8 +141,8 @@ app.post('/recievemessage', async (req, res) => {
                 return;
             }
             else {
-                await client.incr(message.payload.source)
-                await SendMessage({to: message.payload.source, message: `Please type */help* to get available commands!`})
+                // await client.incr(message.payload.source)
+                // await SendMessage({to: message.payload.source, message: `Please type */help* to get available commands!`})
                 // client.disconnect()
                 return;
             }

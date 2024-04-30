@@ -18,11 +18,12 @@ import checkSpam from './middleware/checkSpam';
 import connectDb from '../utils/connectDb';
 import type MessageType from '../types/message';
 import dotenv from 'dotenv';
+import { Config } from "sst/node/config";
 dotenv.config();
-await connectDb()
 
 
 const Main = async (message: MessageType) => {
+    await connectDb()
     if (message.payload.type == "text" && message.payload.payload.text) {
         const isSpam = await checkSpam(message)
         if(!isSpam && message.payload.type == 'text'){
@@ -103,12 +104,12 @@ const Main = async (message: MessageType) => {
                 return;
             }
             const checkeveryoneRegex = /\/checkeveryone/i;
-            if (checkeveryoneRegex.test(message.payload.payload.text) && message.payload.source === process.env.MY_PHONE) {
+            if (checkeveryoneRegex.test(message.payload.payload.text) && message.payload.source === Config.MY_PHONE) {
                 await checkEveryone()
                 return;
             }
             const everyoneRegex = /\/everyone/i;
-            if (everyoneRegex.test(message.payload.payload.text) && message.payload.source === process.env.MY_PHONE) {
+            if (everyoneRegex.test(message.payload.payload.text) && message.payload.source === Config.MY_PHONE) {
                 await advertiseEveryone(message)
                 return;
             }

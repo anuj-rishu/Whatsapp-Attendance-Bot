@@ -5,6 +5,7 @@ import getSubjectsWithMoreAbsentHours from '../../utils/getSubjectsWithMoreAbsen
 // import checkPayment from '../middleware/checkPayment';
 import SendMessage from '../../utils/SendMessage';
 import client from '../../utils/redisConnection';
+import { Config } from "sst/node/config";
 
 
 function getCurrentTimeIndia() {
@@ -21,7 +22,7 @@ const checkEveryone = async () => {
             try {
                 // if ((await checkPayment(chat, client, message, true)).success) {
                 let res;
-                res = await axios.post(process.env.SRM_USER_URL!, {}, {
+                res = await axios.post(Config.SRM_USER_URL!, {}, {
                     headers: {
                         "X-Access-Token": people.token
                     }
@@ -29,11 +30,11 @@ const checkEveryone = async () => {
                 if (res.data.error) {
                     const chat = await Chat.findById(people.chatid)!
                     if(!chat) return;
-                    let res2 = await axios.post(process.env.SRM_TOKEN_URL!, {
+                    let res2 = await axios.post(Config.SRM_TOKEN_URL!, {
                         username: chat.userid,
                         password: chat.password
                     })
-                    let res3 = await axios.post(process.env.SRM_USER_URL!, {}, {
+                    let res3 = await axios.post(Config.SRM_USER_URL!, {}, {
                         headers: {
                             "X-Access-Token": res2.data.token
                         }

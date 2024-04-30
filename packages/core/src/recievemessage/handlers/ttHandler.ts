@@ -3,10 +3,12 @@ import MessageType from "../../types/message";
 import axios from "axios";
 import SendMessage from '../../utils/SendMessage';
 import client from '../../utils/redisConnection';
+import { Config } from "sst/node/config";
+
 
 const getDayOrder = async () => {
     try {
-        const res = await axios.post(process.env.SRM_DO_URL!)
+        const res = await axios.post(Config.SRM_DO_URL!)
         if(res.data.error) throw res.data.error;
         if(res.data && res.data.day_order.includes("No Day Order")){
             return {response: "No Day Order"};

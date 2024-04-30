@@ -7,6 +7,7 @@ import Update from "../../models/Update";
 import SendMessage from "../../utils/SendMessage";
 import extractDetails from "../../utils/extractDetails";
 import client from "../../utils/redisConnection";
+import { Config } from "sst/node/config";
 
 function calculateMargin(totalConducted: number, presentHours: number) {
 	let margin = 0;
@@ -39,7 +40,7 @@ const attHandler = async (chat: ChatDocument, message: MessageType) => {
   try {
     let res;
     res = await axios.post(
-      process.env.SRM_USER_URL!,
+      Config.SRM_USER_URL!,
       {},
       {
         headers: {
@@ -50,12 +51,12 @@ const attHandler = async (chat: ChatDocument, message: MessageType) => {
     if (res.data.error) {
       const newchat = await Chat.findById(chat._id);
       if (!newchat) return;
-      let res2 = await axios.post(process.env.SRM_TOKEN_URL!, {
+      let res2 = await axios.post(Config.SRM_TOKEN_URL!, {
         username: newchat.userid,
         password: newchat.password,
       });
       let res3 = await axios.post(
-        process.env.SRM_USER_URL!,
+        Config.SRM_USER_URL!,
         {},
         {
           headers: {

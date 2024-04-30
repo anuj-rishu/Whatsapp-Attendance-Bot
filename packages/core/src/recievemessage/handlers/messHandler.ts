@@ -3,6 +3,8 @@ import axios from "axios";
 import Mess from "../../models/Mess";
 import SendMessage from "../../utils/SendMessage";
 import client from "../../utils/redisConnection";
+import { Config } from "sst/node/config";
+
 
 const getDayandTime = () => {
   const indianTimeOffset = 5.5 * 60 * 60 * 1000;
@@ -55,7 +57,7 @@ const messHandler = async (message: MessageType) => {
     const mess = await Mess.findOne({ __v: 0 });
     const { day, currentMeal } = getDayandTime();
     if (!mess) {
-      const res = await axios.get(process.env.WHATS_MESS_URL!);
+      const res = await axios.get(Config.WHATS_MESS_URL!);
       await Mess.create({
         monday: res.data.data[0].monday,
         tuesday: res.data.data[0].tuesday,
@@ -86,7 +88,7 @@ const messHandler = async (message: MessageType) => {
       await SendMessage({ to: message.payload.source, message: stringtosend });
       return;
     } else if (Date.now() - mess.updatedAt.getTime() > 86400000) {
-      const res = await axios.get(process.env.WHATS_MESS_URL!);
+      const res = await axios.get(Config.WHATS_MESS_URL!);
       await Mess.findByIdAndUpdate(mess._id, {
         monday: res.data.data[0].monday,
         tuesday: res.data.data[0].tuesday,

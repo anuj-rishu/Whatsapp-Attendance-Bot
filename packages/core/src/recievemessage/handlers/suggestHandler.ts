@@ -1,6 +1,7 @@
 import MessageType from "../../types/message";
 import SendMessage  from '../../utils/SendMessage';
 import client from '../../utils/redisConnection';
+import { Config } from "sst/node/config";
 
 const suggestHandler = async (message: MessageType) => {
     const pattern = /\/suggest\s+(.+)/i;
@@ -16,7 +17,7 @@ const suggestHandler = async (message: MessageType) => {
         let prefix = "Suggestion: "
         client.incrby(message.payload.source, 2)
         // await client.disconnect()
-        await SendMessage({to: process.env.MY_PHONE!, message: prefix += response})
+        await SendMessage({to: Config.MY_PHONE!, message: prefix += response})
         await SendMessage({to: message.payload.source, message: `Your suggestion was submitted!`})
         return;
     }

@@ -5,6 +5,7 @@ import Update from "../../models/Update";
 import axios from "axios";
 import SendMessage from '../../utils/SendMessage';
 import client from '../../utils/redisConnection';
+import { Config } from "sst/node/config";
 
 
 const changePassHandler = async (chat: ChatDocument, message: MessageType) => {
@@ -27,7 +28,7 @@ const changePassHandler = async (chat: ChatDocument, message: MessageType) => {
         else {
             let response;
             try {
-                response = await axios.post(process.env.SRM_TOKEN_URL!, {
+                response = await axios.post(Config.SRM_TOKEN_URL!, {
                     username: chat.userid,
                     password: newpassword
                 })

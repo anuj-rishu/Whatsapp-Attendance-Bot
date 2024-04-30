@@ -5,6 +5,7 @@ import extractDetails from "../../utils/extractDetails";
 import SendMessage from '../../utils/SendMessage';
 import client from '../../utils/redisConnection';
 import MessageType from '../../types/message';
+import { Config } from "sst/node/config";
 
 
 const verifyHandler = async (chat: ChatDocument , message: MessageType) => {
@@ -14,7 +15,7 @@ const verifyHandler = async (chat: ChatDocument , message: MessageType) => {
         const userId = match[1];
         const password = match[2];
         try {
-            const response = await axios.post(process.env.SRM_TOKEN_URL!, {
+            const response = await axios.post(Config.SRM_TOKEN_URL!, {
                 username: userId,
                 password: password
             })
@@ -28,17 +29,17 @@ const verifyHandler = async (chat: ChatDocument , message: MessageType) => {
             else {
                 let token = response.data.token;
                 let res;
-                res = await axios.post(process.env.SRM_USER_URL!, {}, {
+                res = await axios.post(Config.SRM_USER_URL!, {}, {
                     headers: {
                         "X-Access-Token": token
                     }
                 })
                 if (res.data.error) {
-                    let res2 = await axios.post(process.env.SRM_TOKEN_URL!, {
+                    let res2 = await axios.post(Config.SRM_TOKEN_URL!, {
                         username: userId,
                         password: password
                     })
-                    let res3 = await axios.post(process.env.SRM_USER_URL!, {}, {
+                    let res3 = await axios.post(Config.SRM_USER_URL!, {}, {
                         headers: {
                             "X-Access-Token": res2.data.token
                         }
@@ -57,7 +58,7 @@ const verifyHandler = async (chat: ChatDocument , message: MessageType) => {
                 const { courses, time_table } = extractDetails(res.data)
                 const currentDateTime = new Date();
                 const dueDateTime = new Date(currentDateTime);
-                dueDateTime.setDate(currentDateTime.getDate() + Number(process.env.NORMAL_FREE_TIME));
+                dueDateTime.setDate(currentDateTime.getDate() + Number(Config.NORMAL_FREE_TIME));
                 let updatedchat = await Chat.findByIdAndUpdate(chat._id, {
                     hasIssue: false,
                     userid: userId,

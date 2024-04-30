@@ -3,6 +3,8 @@ import SendMessage from '../../utils/SendMessage';
 import client from '../../utils/redisConnection';
 import axios from 'axios';
 import dotenv from 'dotenv';
+import { Config } from "sst/node/config";
+
 dotenv.config();
 
 const checkSpam = async (message: MessageType) => {
@@ -34,15 +36,15 @@ const blockUser = async (phone: string) => {
     data.append('phone', phone);
     data.append('block', 'true');
     try {
-        const res = await axios.put(`${process.env.BLOCK_URL}/${process.env.GUPSHUP_APP_NAME}`, data, {
+        const res = await axios.put(`${Config.BLOCK_URL}/${Config.GUPSHUP_APP_NAME}`, data, {
             headers: {
-                'apikey': process.env.GUPSHUP_KEY,
+                'apikey': Config.GUPSHUP_KEY,
                 'Content-Type': 'application/x-www-form-urlencoded'
             }
         })
         return res.data
     } catch (error) {
-        await SendMessage({ to: process.env.MY_PHONE!, message: `Block this number: ${phone} !!!` })
+        await SendMessage({ to: Config.MY_PHONE!, message: `Block this number: ${phone} !!!` })
     }
 }
 

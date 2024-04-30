@@ -10,8 +10,8 @@ const paymentHandler = async (chat, client, message) => {
                 accept: 'application/json',
                 'x-api-version': '2022-09-01',
                 'content-type': 'application/json',
-                'x-client-id': process.env.KEY_PUBLIC,
-                'x-client-secret': process.env.KEY_SECRET
+                'x-client-id': Config.KEY_PUBLIC,
+                'x-client-secret': Config.KEY_SECRET
             },
             data: {
                 customer_details: {
@@ -27,7 +27,7 @@ const paymentHandler = async (chat, client, message) => {
                 link_purpose: 'Payment for Whatsapp Bot',
                 link_partial_payments: false,
                 link_auto_reminders: false,
-                link_meta: {notify_url: process.env.NOTIFY_URL, return_url: `https://wa.me/+91${process.env.RETURN_NUMBER}`},
+                link_meta: {notify_url: Config.NOTIFY_URL, return_url: `https://wa.me/+91${Config.RETURN_NUMBER}`},
             }
         };
 

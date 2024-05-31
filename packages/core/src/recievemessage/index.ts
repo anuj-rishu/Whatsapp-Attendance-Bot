@@ -25,7 +25,8 @@ dotenv.config();
 const Main = async (message: MessageType) => {
     await connectDb()
     if (message.payload.type == "text" && message.payload.payload.text) {
-        const isSpam = await checkSpam(message)
+        // const isSpam = await checkSpam(message)
+        const isSpam = false;
         if(!isSpam && message.payload.type == 'text'){
             const verifyRegex = /\/verify/i;
             if (verifyRegex.test(message.payload.payload.text)) {

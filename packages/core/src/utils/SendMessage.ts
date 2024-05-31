@@ -18,7 +18,8 @@ const SendMessage = async ({to, message}: {to: string, message: string}) => {
     data.append('disablePreview', 'false');
     data.append('encode', 'false');
     try {
-        const res = await axios.post(Config.SEND_URL!, data, { headers })
+        await axios.post(Config.SEND_URL!, data, { headers })
+        return;
     } catch (error) {
         console.log("error", error)
     }

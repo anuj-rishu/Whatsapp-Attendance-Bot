@@ -75,34 +75,34 @@ export function API({ stack }: StackContext) {
     FRIEND_FREE_TIME
   ]);
 
-  const cron = new Cron(stack, "cron", {
-    schedule: "cron(30 7,12 ? 1-5,7-12 MON-SAT *)", // run mon-sat at 12:30 and 5:30 pm IST from jan to may and july to dec
-    job: "packages/functions/src/cron/update.handler",
-  });
+  // const cron = new Cron(stack, "cron", {
+  //   schedule: "cron(30 7,12 ? 1-5,7-12 MON-SAT *)", // run mon-sat at 12:30 and 5:30 pm IST from jan to may and july to dec
+  //   job: "packages/functions/src/cron/update.handler",
+  // });
 
-  cron.bind([
-    MONGODB_URI,
-    REDIS_PASSWORD,
-    REDIS_HOST,
-    REDIS_PORT,
-    GUPSHUP_KEY,
-    GUPSHUP_FROM_NUMBER,
-    MY_PHONE,
-    BOT_PHONE,
-    MY_MAILID,
-    RETURN_NUMBER,
-    NOTIFY_URL,
-    GUPSHUP_APP_NAME,
-    SEND_URL,
-    BLOCK_URL,
-    WHATS_MESS_URL,
-    SRM_DO_URL,
-    SRM_TOKEN_URL,
-    SRM_USER_URL,
-    TIME_TO_INCREASE,
-    NORMAL_FREE_TIME,
-    FRIEND_FREE_TIME
-  ]);
+  // cron.bind([
+  //   MONGODB_URI,
+  //   REDIS_PASSWORD,
+  //   REDIS_HOST,
+  //   REDIS_PORT,
+  //   GUPSHUP_KEY,
+  //   GUPSHUP_FROM_NUMBER,
+  //   MY_PHONE,
+  //   BOT_PHONE,
+  //   MY_MAILID,
+  //   RETURN_NUMBER,
+  //   NOTIFY_URL,
+  //   GUPSHUP_APP_NAME,
+  //   SEND_URL,
+  //   BLOCK_URL,
+  //   WHATS_MESS_URL,
+  //   SRM_DO_URL,
+  //   SRM_TOKEN_URL,
+  //   SRM_USER_URL,
+  //   TIME_TO_INCREASE,
+  //   NORMAL_FREE_TIME,
+  //   FRIEND_FREE_TIME
+  // ]);
 
   stack.addOutputs({
     ApiEndpoint: api.url,
